@@ -174,6 +174,34 @@ bash query.sh find-function "similar_function"
 bash query.sh find-function-dependencies "similar_function"
 ```
 
+### Rule 5a: Avoid Compiled Files
+
+**CRITICAL: Never analyze or modify compiled files:**
+- `.42f` - Compiled form files
+- `.42m` - Compiled module files
+- `.42r` - Compiled report files
+
+**Why:**
+- Compiled files are binary, not human-readable
+- genero-tools works with source code (.4gl), not compiled files
+- Modifications to compiled files will be lost on recompilation
+- Analysis of compiled files provides no useful context
+
+**What to do:**
+- Always work with source files (`.4gl`)
+- If you encounter compiled files, find the corresponding source file
+- Query genero-tools only on source files
+- Ignore compiled files in your analysis
+
+**Example:**
+```bash
+# WRONG: Don't analyze compiled files
+bash query.sh find-function "my_function" # from .42f file
+
+# RIGHT: Analyze source files
+bash query.sh find-function "my_function" # from .4gl file
+```
+
 ### Rule 6: Verify Impact Before Completion
 
 **Before marking work complete:**
@@ -460,6 +488,10 @@ If changes needed:
 ### ❌ Mistake 7: Ignoring Existing Patterns
 **Wrong**: Implement in new way without studying existing code
 **Right**: Query genero-tools to find similar functions and follow patterns
+
+### ❌ Mistake 8: Analyzing Compiled Files
+**Wrong**: Try to analyze or modify .42f, .42m, .42r files
+**Right**: Always work with source files (.4gl) only
 
 ---
 

@@ -531,6 +531,28 @@ bash query.sh validate-types
 
 ---
 
+## Important: Source Files Only
+
+**genero-tools works ONLY with source files (.4gl)**
+
+Do NOT attempt to query or analyze:
+- `.42f` - Compiled form files (binary)
+- `.42m` - Compiled module files (binary)
+- `.42r` - Compiled report files (binary)
+
+**Always query source files:**
+```bash
+# Correct: Query source file
+bash query.sh find-function "my_function"  # from .4gl
+
+# Wrong: Don't query compiled files
+bash query.sh find-function "my_function"  # from .42f (won't work)
+```
+
+If you need to work with code that's in compiled form, find the corresponding `.4gl` source file first.
+
+---
+
 ## Performance Expectations
 
 | Operation | Time | Use Case |

@@ -607,7 +607,63 @@ formatting:
 
 ---
 
-## Troubleshooting Guide
+## Compiled Files: What to Avoid
+
+### Compiled File Types
+
+Genero compiles source code into binary files:
+- `.42f` - Compiled form files
+- `.42m` - Compiled module files
+- `.42r` - Compiled report files
+
+### Why Avoid Compiled Files
+
+1. **Not Human-Readable**: Binary format, cannot be analyzed
+2. **genero-tools Won't Work**: Designed for source code (.4gl), not compiled files
+3. **Changes Lost**: Any modifications to compiled files are lost on recompilation
+4. **No Context**: Compiled files provide no useful context for analysis
+5. **Wrong Source of Truth**: Source files (.4gl) are the authoritative version
+
+### What to Do Instead
+
+**Always work with source files:**
+```bash
+# WRONG: Don't query compiled files
+bash query.sh find-function "my_function"  # from .42f
+
+# RIGHT: Query source files
+bash query.sh find-function "my_function"  # from .4gl
+```
+
+**If you encounter compiled files:**
+1. Identify the corresponding source file (.4gl)
+2. Query genero-tools on the source file
+3. Ignore the compiled file
+4. Make changes only to source files
+
+**Example workflow:**
+```bash
+# 1. Find source file
+find . -name "*.4gl" -exec grep -l "my_function" {} \;
+
+# 2. Query genero-tools on source
+bash query.sh find-function "my_function"
+
+# 3. Modify source file
+# (edit the .4gl file, not the .42f/.42m/.42r)
+
+# 4. Recompile
+# (compilation happens automatically or via build process)
+```
+
+### Logging Compiled File Encounters
+
+If you encounter compiled files in your analysis:
+```bash
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [WARNING] Compiled file encountered: file.42f - using source file instead" >> agent.log
+```
+
+---
 
 ### Issue: Slow Queries
 
