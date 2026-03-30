@@ -2,6 +2,8 @@
 
 Comprehensive codebase analysis tool that extracts and indexes rich metadata from Genero/4GL codebases to enable IDE/editor integration, AI-powered code review, and developer tooling.
 
+> **📌 Note:** For agent reference, start with **[GENERO_TOOLS_REFERENCE.md](GENERO_TOOLS_REFERENCE.md)** and **[GENERO_TOOLS_SETUP.md](GENERO_TOOLS_SETUP.md)**. These consolidated files contain all essential information for typical usage. Detailed documentation files below are available for deep dives into specific topics.
+
 ## Features
 
 - **Function Signature Extraction** - Names, parameters, return types, line numbers
@@ -79,13 +81,18 @@ bash query.sh author-expertise "Chilly"
 
 ## Documentation
 
-- **[docs/FEATURES.md](docs/FEATURES.md)** - Complete feature list with examples
-- **[docs/QUERYING.md](docs/QUERYING.md)** - Query interface documentation
-- **[docs/TYPE_RESOLUTION_GUIDE.md](docs/TYPE_RESOLUTION_GUIDE.md)** - Type resolution system
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design and components
-- **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** - Development workflow
-- **[docs/SECURITY.md](docs/SECURITY.md)** - Security practices
-- **[docs/api/](docs/api/)** - Complete API reference (JSON format)
+### Quick Start (Start Here)
+- **[GENERO_TOOLS_REFERENCE.md](GENERO_TOOLS_REFERENCE.md)** - Query reference, usage patterns, and output formats
+- **[GENERO_TOOLS_SETUP.md](GENERO_TOOLS_SETUP.md)** - Installation, configuration, operations, and troubleshooting
+
+### Detailed Reference (Optional)
+- **[FEATURES.md](FEATURES.md)** - Complete feature list with examples
+- **[QUERYING.md](QUERYING.md)** - Query interface documentation
+- **[TYPE_RESOLUTION_GUIDE.md](TYPE_RESOLUTION_GUIDE.md)** - Type resolution system
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and components
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Development workflow
+- **[SECURITY.md](SECURITY.md)** - Security practices
+- **[api/](api/)** - Complete API reference (JSON format)
 
 ## Type Resolution (v2.1.0)
 
