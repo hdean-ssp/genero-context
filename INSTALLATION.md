@@ -105,7 +105,7 @@ A complete system for AI agents to work consistently and intelligently on Genero
 
 ## Implementation Roadmap
 
-### Phase 1: ✅ COMPLETE (Current)
+### Phase 1: ✅ COMPLETE
 - Retrieve knowledge
 - Commit knowledge
 - Search knowledge
@@ -113,26 +113,26 @@ A complete system for AI agents to work consistently and intelligently on Genero
 - File locking for concurrent access
 - **Status:** Production ready
 
-### Phase 2: ⏳ PLANNED (Week 2)
+### Phase 2: ✅ COMPLETE
 - Conflict resolution for simultaneous writes
 - Automatic metadata updates
 - Statistics collection
 - Knowledge comparison tool
-- **Effort:** 25-30 hours
+- **Status:** Production ready
 
-### Phase 3: ⏳ PLANNED (Week 3)
+### Phase 3: ✅ COMPLETE
 - Pattern detection
 - Issue flagging
 - Recommendation generation
 - Full-text search with indexing
-- **Effort:** 20-25 hours
+- **Status:** Production ready
 
-### Phase 4: ⏳ PLANNED (Week 4)
+### Phase 4: ✅ COMPLETE
 - Workflow hooks for automation
 - Automatic retrieval/commit
 - Audit trail
 - Quality scoring
-- **Effort:** 15-20 hours
+- **Status:** Production ready
 
 ---
 
@@ -153,18 +153,31 @@ git clone https://github.com/hdean-ssp/genero-context.git
 cd genero-context
 ```
 
-### Step 2: Initialize AKR (Admin Only)
+### Step 2: Run Installation Script
 
 ```bash
-bash .kiro/scripts/setup_akr.sh
+bash install.sh
+```
+
+This script will:
+- Update the repository from GitHub
+- Verify all framework files
+- Back up any existing files
+- Copy framework to your `~/.kiro` directory
+- Verify installation
+
+### Step 3: Initialize AKR (Admin Only)
+
+```bash
+bash ~/.kiro/scripts/setup_akr.sh
 ```
 
 This creates the AKR directory structure at `$BRODIR/etc/genero-akr` (or `/opt/genero/etc/genero-akr`).
 
-### Step 3: Verify Setup
+### Step 4: Verify Setup
 
 ```bash
-bash .kiro/scripts/validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 ```
 
 Expected output:
@@ -172,27 +185,56 @@ Expected output:
 [SUCCESS] All knowledge documents are valid!
 ```
 
-### Step 4: Read Quick Start
+### Step 5: Read Quick Start
 
 ```bash
-cat .kiro/AKR_QUICK_START.md
+cat ~/.kiro/AKR_QUICK_START.md
 ```
 
 ---
 
-## Installation Steps
+## Manual Installation (Alternative)
+
+## Manual Installation (Alternative)
 
 ### Step 1: Determine Installation Location
 
 The framework can be installed anywhere. By default, it uses:
 - **AKR Path:** `$BRODIR/etc/genero-akr` (or `/opt/genero/etc/genero-akr`)
-- **Scripts:** `.kiro/` directory in your workspace
+- **Scripts:** `~/.kiro/scripts/` directory in your home
 
-### Step 2: Configure AKR Path (Optional)
+### Step 2: Clone Repository
+
+```bash
+git clone https://github.com/hdean-ssp/genero-context.git
+cd genero-context
+```
+
+### Step 3: Copy Files to ~/.kiro
+
+```bash
+# Create directories
+mkdir -p ~/.kiro/scripts
+mkdir -p ~/.kiro/steering
+
+# Copy scripts
+cp .kiro/scripts/*.sh ~/.kiro/scripts/
+chmod +x ~/.kiro/scripts/*.sh
+
+# Copy documentation
+cp .kiro/AKR_QUICK_START.md ~/.kiro/
+cp .kiro/AKR_SCRIPTS_README.md ~/.kiro/
+cp .kiro/scripts/README.md ~/.kiro/scripts/
+
+# Copy steering files
+cp .kiro/steering/*.md ~/.kiro/steering/
+```
+
+### Step 4: Configure AKR Path (Optional)
 
 If you want to use a different path:
 
-1. Edit `.kiro/scripts/akr-config.sh`:
+1. Edit `~/.kiro/scripts/akr-config.sh`:
    ```bash
    # Change this line:
    export GENERO_AKR_BASE_PATH="${BRODIR:-/opt/genero}/etc/genero-akr"
@@ -203,12 +245,12 @@ If you want to use a different path:
 
 2. Save the file
 
-### Step 3: Initialize AKR
+### Step 5: Initialize AKR
 
 Run as admin/root:
 
 ```bash
-bash .kiro/scripts/setup_akr.sh
+bash ~/.kiro/scripts/setup_akr.sh
 ```
 
 This creates:
@@ -227,23 +269,23 @@ $GENERO_AKR_BASE_PATH/
 └── INDEX.md            # Master index
 ```
 
-### Step 4: Verify Installation
+### Step 6: Verify Installation
 
 ```bash
-bash .kiro/scripts/validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 ```
 
-### Step 5: Test Scripts
+### Step 7: Test Scripts
 
 ```bash
 # Test retrieval (will fail - no knowledge yet, this is normal)
-bash .kiro/scripts/retrieve_knowledge.sh --type function --name "test"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "test"
 
 # Test search
-bash .kiro/scripts/search_knowledge.sh --query "test"
+bash ~/.kiro/scripts/search_knowledge.sh --query "test"
 
 # Test validation
-bash .kiro/scripts/validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 ```
 
 ---
@@ -252,7 +294,7 @@ bash .kiro/scripts/validate_knowledge.sh
 
 ### AKR Path Configuration
 
-All paths are configured in `.kiro/scripts/akr-config.sh`:
+All paths are configured in `~/.kiro/scripts/akr-config.sh`:
 
 ```bash
 # Main configuration (change this to move AKR)
@@ -279,7 +321,7 @@ export GENERO_AGENT_ID="agent-1"
 export GENERO_AKR_LOG_LEVEL="info"
 
 # Then run scripts
-bash .kiro/scripts/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action create
+bash ~/.kiro/scripts/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action create
 ```
 
 ---
@@ -360,7 +402,7 @@ bash .kiro/scripts/validate_knowledge.sh
 
 ### "AKR base path does not exist"
 ```bash
-bash .kiro/scripts/setup_akr.sh
+bash ~/.kiro/scripts/setup_akr.sh
 ```
 
 ### "Permission denied"
@@ -384,7 +426,7 @@ cat > /tmp/findings.json << 'EOF'
 }
 EOF
 
-bash .kiro/scripts/commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "test_function" \
   --findings /tmp/findings.json \
@@ -395,16 +437,31 @@ bash .kiro/scripts/commit_knowledge.sh \
 Wait 30 seconds and try again (lock will be released):
 ```bash
 sleep 30
-bash .kiro/scripts/commit_knowledge.sh ...
+bash ~/.kiro/scripts/commit_knowledge.sh ...
+```
+
+### Installation script issues
+
+**"Git not found"**
+```bash
+# Install git first
+sudo apt-get install git  # Ubuntu/Debian
+brew install git          # macOS
+```
+
+**"Repository has uncommitted changes"**
+```bash
+# Either commit changes or use --force flag
+bash install.sh --force
 ```
 
 ---
 
 ## Next Steps
 
-1. **Read Quick Start:** `.kiro/AKR_QUICK_START.md`
-2. **Understand Workflow:** `.kiro/steering/genero-akr-workflow.md`
-3. **Train Your Team:** Share `.kiro/AKR_SCRIPTS_README.md`
+1. **Read Quick Start:** `~/.kiro/AKR_QUICK_START.md`
+2. **Understand Workflow:** `~/.kiro/steering/genero-akr-workflow.md`
+3. **Train Your Team:** Share `~/.kiro/AKR_SCRIPTS_README.md`
 4. **Start Using:** Retrieve and commit knowledge
 5. **Monitor Adoption:** Track usage and gather feedback
 
@@ -412,10 +469,11 @@ bash .kiro/scripts/commit_knowledge.sh ...
 
 ## Support
 
-- **Quick Start:** `.kiro/AKR_QUICK_START.md`
-- **Full Guide:** `.kiro/AKR_SCRIPTS_README.md`
-- **Workflow:** `.kiro/steering/genero-akr-workflow.md`
-- **Validation:** `bash .kiro/scripts/validate_knowledge.sh`
+- **Quick Start:** `~/.kiro/AKR_QUICK_START.md`
+- **Full Guide:** `~/.kiro/AKR_SCRIPTS_README.md`
+- **Scripts Overview:** `~/.kiro/scripts/README.md`
+- **Workflow:** `~/.kiro/steering/genero-akr-workflow.md`
+- **Validation:** `bash ~/.kiro/scripts/validate_knowledge.sh`
 - **Logs:** `$GENERO_AKR_BASE_PATH/.logs/akr.log`
 
 ---
