@@ -27,13 +27,14 @@ A complete system for AI agents to work consistently and intelligently on Genero
    - Analysis history tracking
    - Location: `$BRODIR/etc/genero-akr` (configurable)
 
-3. **Production Scripts** (Phase 1 Complete)
-   - `setup_akr.sh` - Initialize AKR
-   - `retrieve_knowledge.sh` - Get existing knowledge
-   - `commit_knowledge.sh` - Save knowledge with locking
-   - `search_knowledge.sh` - Find knowledge
-   - `validate_knowledge.sh` - Check consistency
-   - Location: `.kiro/`
+3. **Production Scripts** (Phase 1-4 Complete)
+   - 18 production-ready scripts organized by phase
+   - Phase 1: Core (Retrieve, Commit, Search, Validate)
+   - Phase 2: Metadata & Conflict (Updates, Merging, Comparison, Statistics)
+   - Phase 3: Search & Analysis (Indexing, Patterns, Issues)
+   - Phase 4: Automation & Audit (Hooks, Audit Trail, Quality Scoring)
+   - Location: `.kiro/scripts/`
+   - See `.kiro/scripts/README.md` for complete reference
 
 4. **Comprehensive Documentation**
    - Quick start guide (5 minutes)
@@ -155,7 +156,7 @@ cd genero-context
 ### Step 2: Initialize AKR (Admin Only)
 
 ```bash
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 ```
 
 This creates the AKR directory structure at `$BRODIR/etc/genero-akr` (or `/opt/genero/etc/genero-akr`).
@@ -163,7 +164,7 @@ This creates the AKR directory structure at `$BRODIR/etc/genero-akr` (or `/opt/g
 ### Step 3: Verify Setup
 
 ```bash
-bash .kiro/validate_knowledge.sh
+bash .kiro/scripts/validate_knowledge.sh
 ```
 
 Expected output:
@@ -191,7 +192,7 @@ The framework can be installed anywhere. By default, it uses:
 
 If you want to use a different path:
 
-1. Edit `.kiro/akr-config.sh`:
+1. Edit `.kiro/scripts/akr-config.sh`:
    ```bash
    # Change this line:
    export GENERO_AKR_BASE_PATH="${BRODIR:-/opt/genero}/etc/genero-akr"
@@ -207,7 +208,7 @@ If you want to use a different path:
 Run as admin/root:
 
 ```bash
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 ```
 
 This creates:
@@ -229,20 +230,20 @@ $GENERO_AKR_BASE_PATH/
 ### Step 4: Verify Installation
 
 ```bash
-bash .kiro/validate_knowledge.sh
+bash .kiro/scripts/validate_knowledge.sh
 ```
 
 ### Step 5: Test Scripts
 
 ```bash
 # Test retrieval (will fail - no knowledge yet, this is normal)
-bash .kiro/retrieve_knowledge.sh --type function --name "test"
+bash .kiro/scripts/retrieve_knowledge.sh --type function --name "test"
 
 # Test search
-bash .kiro/search_knowledge.sh --query "test"
+bash .kiro/scripts/search_knowledge.sh --query "test"
 
 # Test validation
-bash .kiro/validate_knowledge.sh
+bash .kiro/scripts/validate_knowledge.sh
 ```
 
 ---
@@ -251,7 +252,7 @@ bash .kiro/validate_knowledge.sh
 
 ### AKR Path Configuration
 
-All paths are configured in `.kiro/akr-config.sh`:
+All paths are configured in `.kiro/scripts/akr-config.sh`:
 
 ```bash
 # Main configuration (change this to move AKR)
@@ -278,7 +279,7 @@ export GENERO_AGENT_ID="agent-1"
 export GENERO_AKR_LOG_LEVEL="info"
 
 # Then run scripts
-bash .kiro/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action create
+bash .kiro/scripts/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action create
 ```
 
 ---
@@ -304,19 +305,19 @@ chmod 775 $GENERO_AKR_BASE_PATH/*
 ### setup_akr.sh
 Initialize AKR directory structure and files.
 ```bash
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 ```
 
 ### retrieve_knowledge.sh
 Get existing knowledge about an artifact.
 ```bash
-bash .kiro/retrieve_knowledge.sh --type function --name "process_order"
+bash .kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 ```
 
 ### commit_knowledge.sh
 Save knowledge about an artifact.
 ```bash
-bash .kiro/commit_knowledge.sh \
+bash .kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
@@ -326,13 +327,13 @@ bash .kiro/commit_knowledge.sh \
 ### search_knowledge.sh
 Search for knowledge in the repository.
 ```bash
-bash .kiro/search_knowledge.sh --query "type resolution"
+bash .kiro/scripts/search_knowledge.sh --query "type resolution"
 ```
 
 ### validate_knowledge.sh
 Check schema compliance and consistency.
 ```bash
-bash .kiro/validate_knowledge.sh
+bash .kiro/scripts/validate_knowledge.sh
 ```
 
 ---
@@ -359,7 +360,7 @@ bash .kiro/validate_knowledge.sh
 
 ### "AKR base path does not exist"
 ```bash
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 ```
 
 ### "Permission denied"
@@ -383,7 +384,7 @@ cat > /tmp/findings.json << 'EOF'
 }
 EOF
 
-bash .kiro/commit_knowledge.sh \
+bash .kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "test_function" \
   --findings /tmp/findings.json \
@@ -394,7 +395,7 @@ bash .kiro/commit_knowledge.sh \
 Wait 30 seconds and try again (lock will be released):
 ```bash
 sleep 30
-bash .kiro/commit_knowledge.sh ...
+bash .kiro/scripts/commit_knowledge.sh ...
 ```
 
 ---
@@ -414,7 +415,7 @@ bash .kiro/commit_knowledge.sh ...
 - **Quick Start:** `.kiro/AKR_QUICK_START.md`
 - **Full Guide:** `.kiro/AKR_SCRIPTS_README.md`
 - **Workflow:** `.kiro/steering/genero-akr-workflow.md`
-- **Validation:** `bash .kiro/validate_knowledge.sh`
+- **Validation:** `bash .kiro/scripts/validate_knowledge.sh`
 - **Logs:** `$GENERO_AKR_BASE_PATH/.logs/akr.log`
 
 ---
@@ -423,13 +424,26 @@ bash .kiro/commit_knowledge.sh ...
 
 ### Essential Files (User-Facing)
 
-**Configuration & Scripts** (`.kiro/`)
+**Configuration & Scripts** (`.kiro/scripts/`)
 - `akr-config.sh` - Centralized configuration (change AKR path here)
 - `setup_akr.sh` - Initialize AKR directory structure
 - `retrieve_knowledge.sh` - Retrieve knowledge by type/name
 - `commit_knowledge.sh` - Commit knowledge with file locking
 - `search_knowledge.sh` - Search knowledge by query
 - `validate_knowledge.sh` - Validate schema compliance
+- `update_metadata.sh` - Auto-update metadata
+- `merge_knowledge.sh` - Conflict resolution
+- `compare_knowledge.sh` - Knowledge comparison
+- `get_statistics.sh` - Adoption metrics
+- `build_index.sh` - Build search index
+- `search_indexed.sh` - Fast full-text search
+- `detect_patterns.sh` - Pattern detection
+- `flag_issues.sh` - Issue flagging
+- `auto_retrieve.sh` - Auto retrieval hook
+- `auto_commit.sh` - Auto commit hook
+- `audit_trail.sh` - Audit trail
+- `quality_score.sh` - Quality scoring
+- `README.md` - Scripts directory overview
 
 **Documentation** (`.kiro/`)
 - `AKR_QUICK_START.md` - 10-step quick start guide (5 minutes)
@@ -527,7 +541,9 @@ genero-context/
 ## Version Information
 
 - **Framework Version:** 1.0.0
-- **Phase:** 1 (Complete)
+- **Phase:** 4 (Complete)
 - **Status:** Production Ready
 - **Last Updated:** March 30, 2026
+- **Total Scripts:** 18
+- **Total Lines of Code:** 3,000+
 

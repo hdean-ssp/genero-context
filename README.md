@@ -27,27 +27,27 @@ git clone https://github.com/hdean-ssp/genero-context.git
 cd genero-context
 
 # 2. Initialize AKR
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 
 # 3. Verify setup
-bash .kiro/validate_knowledge.sh
+bash .kiro/scripts/validate_knowledge.sh
 ```
 
 ### For Agents (Usage)
 
 ```bash
 # Retrieve existing knowledge
-bash .kiro/retrieve_knowledge.sh --type function --name "process_order"
+bash .kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 
 # Commit findings
-bash .kiro/commit_knowledge.sh \
+bash .kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
   --action append
 
 # Search knowledge
-bash .kiro/search_knowledge.sh --query "type resolution"
+bash .kiro/scripts/search_knowledge.sh --query "type resolution"
 ```
 
 ---
@@ -135,7 +135,7 @@ export GENERO_AKR_BASE_PATH="/shared/genero-akr"
 
 Then run setup:
 ```bash
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 ```
 
 ---
@@ -210,7 +210,7 @@ See [LICENSE](LICENSE) file for details.
 ## Next Steps
 
 1. **Read:** [INSTALLATION.md](INSTALLATION.md)
-2. **Setup:** Run `bash .kiro/setup_akr.sh`
+2. **Setup:** Run `bash .kiro/scripts/setup_akr.sh`
 3. **Learn:** Read [.kiro/AKR_QUICK_START.md](.kiro/AKR_QUICK_START.md)
 4. **Use:** Start retrieving and committing knowledge
 5. **Integrate:** Follow [.kiro/steering/genero-akr-workflow.md](.kiro/steering/genero-akr-workflow.md)

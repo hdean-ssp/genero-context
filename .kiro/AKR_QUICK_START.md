@@ -9,7 +9,7 @@
 Run this once to set up the shared AKR:
 
 ```bash
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 ```
 
 This creates the directory structure at `$BRODIR/etc/genero-akr` (or `/opt/genero/etc/genero-akr`).
@@ -21,7 +21,7 @@ This creates the directory structure at `$BRODIR/etc/genero-akr` (or `/opt/gener
 Check that everything is ready:
 
 ```bash
-bash .kiro/validate_knowledge.sh
+bash .kiro/scripts/validate_knowledge.sh
 ```
 
 Expected output:
@@ -40,7 +40,7 @@ Expected output:
 Try to retrieve knowledge (will be empty initially):
 
 ```bash
-bash .kiro/retrieve_knowledge.sh --type function --name "test"
+bash .kiro/scripts/retrieve_knowledge.sh --type function --name "test"
 ```
 
 Expected output:
@@ -102,7 +102,7 @@ EOF
 Commit the sample knowledge:
 
 ```bash
-bash .kiro/commit_knowledge.sh \
+bash .kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "test_function" \
   --findings /tmp/sample_findings.json \
@@ -122,7 +122,7 @@ Expected output:
 Now retrieve the knowledge you just created:
 
 ```bash
-bash .kiro/retrieve_knowledge.sh --type function --name "test_function"
+bash .kiro/scripts/retrieve_knowledge.sh --type function --name "test_function"
 ```
 
 Expected output:
@@ -152,7 +152,7 @@ Test function for AKR validation
 Search for the knowledge you created:
 
 ```bash
-bash .kiro/search_knowledge.sh --query "test"
+bash .kiro/scripts/search_knowledge.sh --query "test"
 ```
 
 Expected output:
@@ -185,7 +185,7 @@ EOF
 Append to existing knowledge:
 
 ```bash
-bash .kiro/commit_knowledge.sh \
+bash .kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "test_function" \
   --findings /tmp/updated_findings.json \
@@ -205,7 +205,7 @@ Expected output:
 Retrieve the updated knowledge:
 
 ```bash
-bash .kiro/retrieve_knowledge.sh --type function --name "test_function"
+bash .kiro/scripts/retrieve_knowledge.sh --type function --name "test_function"
 ```
 
 You should see the analysis history updated with the new entry.
@@ -228,51 +228,51 @@ rm /tmp/sample_findings.json /tmp/updated_findings.json
 ### Retrieve Knowledge
 ```bash
 # Function
-bash .kiro/retrieve_knowledge.sh --type function --name "process_order"
+bash .kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 
 # File
-bash .kiro/retrieve_knowledge.sh --type file --path "src/orders.4gl"
+bash .kiro/scripts/retrieve_knowledge.sh --type file --path "src/orders.4gl"
 
 # Module
-bash .kiro/retrieve_knowledge.sh --type module --name "payment"
+bash .kiro/scripts/retrieve_knowledge.sh --type module --name "payment"
 
 # Pattern
-bash .kiro/retrieve_knowledge.sh --type pattern --name "error_handling"
+bash .kiro/scripts/retrieve_knowledge.sh --type pattern --name "error_handling"
 
 # Issue
-bash .kiro/retrieve_knowledge.sh --type issue --name "type_resolution_issues"
+bash .kiro/scripts/retrieve_knowledge.sh --type issue --name "type_resolution_issues"
 ```
 
 ### Commit Knowledge
 ```bash
 # Create new
-bash .kiro/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action create
+bash .kiro/scripts/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action create
 
 # Append to existing
-bash .kiro/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action append
+bash .kiro/scripts/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action append
 
 # Update (replace)
-bash .kiro/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action update
+bash .kiro/scripts/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action update
 
 # Mark as deprecated
-bash .kiro/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action deprecate
+bash .kiro/scripts/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action deprecate
 ```
 
 ### Search Knowledge
 ```bash
 # Search all
-bash .kiro/search_knowledge.sh --query "type resolution"
+bash .kiro/scripts/search_knowledge.sh --query "type resolution"
 
 # Search functions only
-bash .kiro/search_knowledge.sh --query "complexity" --type function
+bash .kiro/scripts/search_knowledge.sh --query "complexity" --type function
 
 # Search patterns only
-bash .kiro/search_knowledge.sh --query "error handling" --category patterns
+bash .kiro/scripts/search_knowledge.sh --query "error handling" --category patterns
 ```
 
 ### Validate Knowledge
 ```bash
-bash .kiro/validate_knowledge.sh
+bash .kiro/scripts/validate_knowledge.sh
 ```
 
 ---
@@ -294,7 +294,7 @@ export GENERO_AKR_BASE_PATH="/shared/genero-akr"
 Then run setup again:
 
 ```bash
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 ```
 
 ---
@@ -311,7 +311,7 @@ export GENERO_AGENT_ID="agent-1"
 export GENERO_AKR_LOG_LEVEL="debug"
 
 # Then run commands
-bash .kiro/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action create
+bash .kiro/scripts/commit_knowledge.sh --type function --name "my_func" --findings findings.json --action create
 ```
 
 ---
@@ -329,16 +329,16 @@ bash .kiro/commit_knowledge.sh --type function --name "my_func" --findings findi
 
 ### "AKR base path does not exist"
 ```bash
-bash .kiro/setup_akr.sh
+bash .kiro/scripts/setup_akr.sh
 ```
 
 ### "Knowledge not found"
 ```bash
 # Search for similar
-bash .kiro/search_knowledge.sh --query "partial_name"
+bash .kiro/scripts/search_knowledge.sh --query "partial_name"
 
 # Or create new
-bash .kiro/commit_knowledge.sh --type function --name "new_func" --findings findings.json --action create
+bash .kiro/scripts/commit_knowledge.sh --type function --name "new_func" --findings findings.json --action create
 ```
 
 ### "Permission denied"
@@ -355,7 +355,7 @@ chmod 775 $GENERO_AKR_BASE_PATH/*
 ```bash
 # Wait 30 seconds and try again
 sleep 30
-bash .kiro/commit_knowledge.sh ...
+bash .kiro/scripts/commit_knowledge.sh ...
 ```
 
 ---
@@ -365,5 +365,5 @@ bash .kiro/commit_knowledge.sh ...
 - Full documentation: `.kiro/AKR_SCRIPTS_README.md`
 - Workflow guide: `.kiro/steering/genero-akr-workflow.md`
 - Check logs: `$GENERO_AKR_BASE_PATH/.logs/akr.log`
-- Validate: `bash .kiro/validate_knowledge.sh`
+- Validate: `bash .kiro/scripts/validate_knowledge.sh`
 
