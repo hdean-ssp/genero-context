@@ -314,28 +314,57 @@ All knowledge documents follow this structure:
    ACTION="deprecate"  # Mark as outdated
    ```
 
-3. **Commit Knowledge**
+3. **Compare with Existing Knowledge (Phase 2)**
+   ```bash
+   # Before committing, see what changed since last analysis
+   bash compare_knowledge.sh \
+     --type function \
+     --name "$TARGET_FUNCTION" \
+     --findings findings.json
+   
+   # Output shows:
+   # - Metrics changes (complexity, LOC, dependents)
+   # - New findings vs existing findings
+   # - New issues vs existing issues
+   # - Recommendations for action
+   ```
+
+4. **Commit Knowledge**
    ```bash
    bash commit_knowledge.sh \
      --type function \
      --name "$TARGET_FUNCTION" \
      --findings findings.json \
      --action "$ACTION"
+   
+   # Note: Metadata updates happen automatically!
+   # - INDEX.md auto-updated
+   # - statistics.md auto-updated
+   # - last_updated.txt auto-updated
    ```
 
-4. **Verify Commit**
+5. **Verify Commit**
    ```bash
    # Retrieve to confirm it was saved
    bash retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
    ```
 
-5. **Update Related Knowledge**
+6. **Check Adoption Metrics (Phase 2)**
+   ```bash
+   # See how much knowledge has been collected
+   bash get_statistics.sh
+   
+   # Or get JSON format for parsing
+   bash get_statistics.sh --format json
+   ```
+
+7. **Update Related Knowledge**
    - If function calls other functions, update their knowledge
    - If function is called by others, update their knowledge
    - If patterns discovered, create/update pattern knowledge
    - If issues found, create/update issue knowledge
 
-6. **Log Activity**
+8. **Log Activity**
    - Agent ID recorded automatically
    - Timestamp recorded automatically
    - Action recorded in analysis history
@@ -1010,6 +1039,282 @@ ARCHIVED (no longer relevant)
 
 ---
 
+## Phase 2 Scripts (Conflict Resolution & Metadata Automation)
+
+Phase 2 adds four new scripts that automate metadata management and handle concurrent access safely.
+
+### When to Use Phase 2 Scripts
+
+**Automatic (called by commit_knowledge.sh):**
+- `update_metadata.sh` - Runs automatically after every commit
+
+**Manual (called by agents when needed):**
+- `compare_knowledge.sh` - Before committing to see what changed
+- `merge_knowledge.sh` - Handles conflicts (usually automatic)
+- `get_statistics.sh` - Check adoption metrics
+
+### Script 1: update_metadata.sh (Automatic)
+
+**Purpose:** Automatically update INDEX.md, statistics.md, and last_updated.txt
+
+**When it runs:** Automatically after every successful `commit_knowledge.sh`
+
+**What it does:**
+- Updates INDEX.md with new artifact entry
+- Recalculates statistics (counts by type)
+- Updates last_updated.txt timestamp
+- Uses file locking for concurrent safety
+
+**You don't need to run this manually** - it's called automatically by commit_knowledge.sh
+
+**Example output:**
+```
+[INFO] Updating metadata for function/process_order (action: create)
+[INFO] Updated INDEX.md
+[INFO] Updated statistics.md
+[INFO] Updated last_updated.txt
+[INFO] Metadata update complete
+```
+
+---
+
+### Script 2: compare_knowledge.sh (Manual - Before Commit)
+
+**Purpose:** Compare current findings with existing knowledge before committing
+
+**When to use:** Before deciding on commit action (create/append/update)
+
+**Usage:**
+```bash
+bash compare_knowledge.sh \
+  --type function \
+  --name "process_order" \
+  --findings findings.json
+```
+
+**What it shows:**
+- Metrics comparison (complexity, LOC, dependents)
+- What's new in current findings
+- What changed since last analysis
+- Recommendations for action
+
+**Example workflow:**
+
+```bash
+# Step 1: Analyze function
+bash query.sh find-function "process_order"
+# ... save findings to findings.json
+
+# Step 2: Compare with existing knowledge
+bash compare_knowledge.sh \
+  --type function \
+  --name "process_order" \
+  --findings findings.json
+
+# Output shows:
+# | Metric | Existing | Current | Change |
+# |--------|----------|---------|--------|
+# | Complexity | 8 | 10 | ↑ +2 |
+# | Lines of Code | 50 | 55 | ↑ +5 |
+# | Dependent Count | 12 | 15 | ↑ +3 (new dependents) |
+
+# Step 3: Decide action based on comparison
+# If complexity increased significantly → use --action update
+# If just new findings → use --action append
+# If first time → use --action create
+
+bash commit_knowledge.sh \
+  --type function \
+  --name "process_order" \
+  --findings findings.json \
+  --action append
+```
+
+**Exit codes:**
+- 0 = Success (comparison generated)
+- 1 = Error
+- 2 = No existing knowledge (nothing to compare)
+
+---
+
+### Script 3: merge_knowledge.sh (Automatic - Conflict Resolution)
+
+**Purpose:** Merge conflicting knowledge when multiple agents write simultaneously
+
+**When it runs:** Automatically when conflicts detected during commit
+
+**What it does:**
+- Detects simultaneous writes to same artifact
+- Merges findings intelligently
+- Preserves analysis history
+- Creates backup before merge
+- Updates last modified timestamp
+
+**You usually don't need to run this manually** - it's called automatically
+
+**Manual usage (if needed):**
+```bash
+bash merge_knowledge.sh \
+  --type function \
+  --name "process_order" \
+  --findings findings.json
+```
+
+**Example scenario:**
+
+```
+Agent 1 and Agent 2 both analyze process_order simultaneously:
+
+Agent 1: Commits first (succeeds)
+bash commit_knowledge.sh --type function --name "process_order" \
+  --findings agent1_findings.json --action create
+
+Agent 2: Tries to commit (conflict detected)
+bash commit_knowledge.sh --type function --name "process_order" \
+  --findings agent2_findings.json --action append
+
+System automatically:
+1. Detects conflict
+2. Calls merge_knowledge.sh
+3. Merges findings from both agents
+4. Preserves both in analysis history
+5. Updates metadata
+6. Returns success
+
+Result: Both agents' findings are preserved, no data loss
+```
+
+**Exit codes:**
+- 0 = Success (merged)
+- 1 = Error
+- 2 = No conflict (no merge needed)
+
+---
+
+### Script 4: get_statistics.sh (Manual - Adoption Metrics)
+
+**Purpose:** Track adoption and usage metrics
+
+**When to use:** Check how much knowledge has been collected, monitor adoption
+
+**Usage:**
+```bash
+# Text format (default)
+bash get_statistics.sh
+
+# JSON format (for parsing)
+bash get_statistics.sh --format json
+
+# CSV format (for spreadsheets)
+bash get_statistics.sh --format csv
+```
+
+**What it shows:**
+- Document counts by type (functions, files, modules, patterns, issues)
+- Total documents
+- Agent activity (total commits, unique agents)
+- Last updated timestamp
+- Adoption status
+
+**Example output:**
+```
+# AKR Statistics
+
+**Generated:** 2026-03-30T14:22:15Z
+
+## Document Counts
+
+| Type | Count |
+|------|-------|
+| Functions | 45 |
+| Files | 12 |
+| Modules | 8 |
+| Patterns | 3 |
+| Issues | 2 |
+| **Total** | **70** |
+
+## Activity
+
+| Metric | Value |
+|--------|-------|
+| Total Commits | 85 |
+| Unique Agents | 5 |
+| Last Updated | 2026-03-30T14:22:15Z |
+
+## Adoption Status
+
+**Status:** Growing adoption (5-25% of codebase analyzed)
+```
+
+**Adoption status levels:**
+- No knowledge yet = Phase 1 setup complete
+- 1-5% = Early adoption
+- 5-25% = Growing adoption
+- 25-50% = Strong adoption
+- 50%+ = Mature adoption
+
+---
+
+## Phase 2 Integration with Workflow
+
+### Planner Hat (Inception Phase)
+
+**Step 3a: Retrieve Existing Knowledge**
+```bash
+# Retrieve what we already know
+bash retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
+
+# Check adoption metrics
+bash get_statistics.sh
+```
+
+### Builder Hat (Construction Phase)
+
+**Step 3: Compare with Existing Knowledge**
+```bash
+# Before committing, see what changed
+bash compare_knowledge.sh \
+  --type function \
+  --name "$TARGET_FUNCTION" \
+  --findings findings.json
+
+# This helps you decide on action:
+# - If metrics changed significantly → use --action update
+# - If just new findings → use --action append
+# - If first time → use --action create
+```
+
+### Reviewer Hat (Operation Phase)
+
+**Step 6: Commit Knowledge (with automatic metadata update)**
+```bash
+# Commit knowledge
+bash commit_knowledge.sh \
+  --type function \
+  --name "$TARGET_FUNCTION" \
+  --findings findings.json \
+  --action append
+
+# Metadata updates happen automatically:
+# - INDEX.md updated
+# - statistics.md updated
+# - last_updated.txt updated
+# - Analysis history recorded
+```
+
+---
+
+## Phase 2 Benefits
+
+✅ **Automatic Metadata** - No manual INDEX.md edits  
+✅ **Conflict Resolution** - Safe concurrent access for 10+ developers  
+✅ **Knowledge Comparison** - Informed decisions on commit action  
+✅ **Adoption Metrics** - Track progress and engagement  
+✅ **File Locking** - Prevents data corruption  
+✅ **Backup & Recovery** - Automatic backups before merge  
+
+---
+
 ## Related Documentation
 
 - **genero-agent-knowledge-repository.md** - Concept and architecture
@@ -1017,6 +1322,7 @@ ARCHIVED (no longer relevant)
 - **genero-context-operations.md** - Operations guide (to be updated)
 - **genero-context-queries.md** - Query reference
 - **GENERO_TOOLS_REFERENCE.md** - Tool reference
+- **AKR_SCRIPTS_README.md** - Detailed script documentation
 
 ---
 

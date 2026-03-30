@@ -819,8 +819,135 @@ bash query.sh search-functions "*"
 
 ---
 
+## Phase 2 AKR Troubleshooting
+
+### Issue: Metadata Updates Failing
+
+**Symptom**: INDEX.md not updating after commit
+
+**Diagnosis:**
+```bash
+# Check if update_metadata.sh is executable
+ls -la .kiro/update_metadata.sh
+
+# Check logs for errors
+tail -20 $GENERO_AKR_BASE_PATH/.logs/akr.log | grep ERROR
+```
+
+**Solution:**
+- Make script executable: `chmod +x .kiro/update_metadata.sh`
+- Check AKR base path exists: `ls -la $GENERO_AKR_BASE_PATH`
+- Check permissions: `ls -la $GENERO_AKR_BASE_PATH/metadata/`
+- Ask admin to fix permissions if needed
+
+---
+
+### Issue: Conflict Detection Not Working
+
+**Symptom**: Multiple agents write to same artifact, no merge happens
+
+**Diagnosis:**
+```bash
+# Check if merge_knowledge.sh is executable
+ls -la .kiro/merge_knowledge.sh
+
+# Check logs for merge events
+grep "Merging knowledge" $GENERO_AKR_BASE_PATH/.logs/akr.log
+```
+
+**Solution:**
+- Make script executable: `chmod +x .kiro/merge_knowledge.sh`
+- Verify file locking is working: `ls -la $GENERO_AKR_BASE_PATH/.locks/`
+- Check for stale locks: `find $GENERO_AKR_BASE_PATH/.locks/ -type d -mtime +1`
+
+---
+
+### Issue: Compare Knowledge Returns No Results
+
+**Symptom**: `compare_knowledge.sh` shows "No existing knowledge"
+
+**Diagnosis:**
+```bash
+# Check if knowledge file exists
+ls -la $GENERO_AKR_BASE_PATH/functions/target_function.md
+
+# Check if artifact name is correct
+bash retrieve_knowledge.sh --type function --name "target_function"
+```
+
+**Solution:**
+- Verify artifact name spelling
+- Verify artifact type (function vs file vs module)
+- Create knowledge first: `bash commit_knowledge.sh --type function --name "target_function" --findings findings.json --action create`
+- Then compare: `bash compare_knowledge.sh --type function --name "target_function" --findings findings.json`
+
+---
+
+### Issue: Statistics Show Zero Documents
+
+**Symptom**: `get_statistics.sh` shows all counts as 0
+
+**Diagnosis:**
+```bash
+# Check if AKR directories exist
+ls -la $GENERO_AKR_BASE_PATH/functions/
+ls -la $GENERO_AKR_BASE_PATH/files/
+
+# Count documents manually
+find $GENERO_AKR_BASE_PATH/functions/ -name "*.md" | wc -l
+```
+
+**Solution:**
+- Initialize AKR: `bash setup_akr.sh`
+- Create sample knowledge: `bash commit_knowledge.sh --type function --name "test" --findings findings.json --action create`
+- Run statistics again: `bash get_statistics.sh`
+
+---
+
+### Issue: Lock Timeout on Commit
+
+**Symptom**: "Failed to acquire lock after 30s"
+
+**Diagnosis:**
+```bash
+# Check for stale locks
+ls -la $GENERO_AKR_BASE_PATH/.locks/
+
+# Check lock age
+find $GENERO_AKR_BASE_PATH/.locks/ -type d -mmin +30
+```
+
+**Solution:**
+- Wait 30 seconds and retry (lock will be released)
+- If lock is stale (>30 minutes old), ask admin to remove: `rmdir $GENERO_AKR_BASE_PATH/.locks/stale_lock`
+- Check if another agent is stuck: `ps aux | grep commit_knowledge`
+
+---
+
+### Issue: Merge Backup Files Accumulating
+
+**Symptom**: Many `.backup.*` files in knowledge directories
+
+**Diagnosis:**
+```bash
+# Count backup files
+find $GENERO_AKR_BASE_PATH -name "*.backup.*" | wc -l
+
+# List recent backups
+find $GENERO_AKR_BASE_PATH -name "*.backup.*" -mtime -7
+```
+
+**Solution:**
+- Backups are normal (created before merge)
+- Clean up old backups (>30 days): `find $GENERO_AKR_BASE_PATH -name "*.backup.*" -mtime +30 -delete`
+- Or ask admin to clean up: `find $GENERO_AKR_BASE_PATH -name "*.backup.*" -mtime +30 -delete`
+
+---
+
 ## Next: Workflow & Agent Behavior
 
 For workflow and agent behavior, see: `genero-context-workflow.md`
 
 For query reference, see: `genero-context-queries.md`
+
+For AKR workflow, see: `genero-akr-workflow.md`

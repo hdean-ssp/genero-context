@@ -104,6 +104,7 @@ Task Received
 **Planner Hat Checklist:**
 - [ ] Task understood completely
 - [ ] Genero-tools queries executed to gather context
+- [ ] **AKR knowledge retrieved** (see genero-akr-workflow.md)
 - [ ] Dependencies identified
 - [ ] Risks documented
 - [ ] Approach documented with clear steps
@@ -111,6 +112,17 @@ Task Received
 - [ ] Human approval received
 
 **Do NOT proceed until all items are checked.**
+
+**Note on AKR (Phase 2):** When retrieving context, also check the Agent Knowledge Repository:
+```bash
+# Retrieve existing knowledge about target artifacts
+bash retrieve_knowledge.sh --type function --name "target_function"
+bash retrieve_knowledge.sh --type file --path "target_file.4gl"
+bash retrieve_knowledge.sh --type module --name "target_module"
+
+# This gives you refined context from previous agent analyses
+# See genero-akr-workflow.md for complete AKR workflow
+```
 
 ### Rule 2: Mandatory Approval Gates
 
@@ -492,6 +504,22 @@ If changes needed:
 ### ❌ Mistake 8: Analyzing Compiled Files
 **Wrong**: Try to analyze or modify .42f, .42m, .42r files
 **Right**: Always work with source files (.4gl) only
+
+### ❌ Mistake 9: Not Using AKR (Phase 2)
+**Wrong**: Start analysis from scratch without checking existing knowledge
+**Right**: Always retrieve existing knowledge from AKR first (see genero-akr-workflow.md)
+
+**AKR Commands:**
+```bash
+# Retrieve existing knowledge
+bash retrieve_knowledge.sh --type function --name "target_function"
+
+# Compare before committing
+bash compare_knowledge.sh --type function --name "target_function" --findings findings.json
+
+# Check adoption metrics
+bash get_statistics.sh
+```
 
 ---
 
