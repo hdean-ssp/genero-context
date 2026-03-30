@@ -373,4 +373,12 @@ log_to_file "COMMIT: type=$TYPE, name=$NAME, action=$ACTION, agent=${GENERO_AGEN
 log_info "Knowledge committed successfully: $TYPE/$NAME"
 log_debug "Knowledge file: $KNOWLEDGE_FILE"
 
+# Update metadata (INDEX.md, statistics.md, last_updated.txt)
+log_debug "Updating metadata..."
+if bash "${SCRIPT_DIR}/update_metadata.sh" --type "$TYPE" --name "$NAME" --action "$ACTION"; then
+  log_debug "Metadata updated successfully"
+else
+  log_error "Failed to update metadata (continuing anyway)"
+fi
+
 exit 0

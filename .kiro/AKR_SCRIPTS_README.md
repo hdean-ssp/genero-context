@@ -464,11 +464,11 @@ chmod 775 $GENERO_AKR_BASE_PATH/*
 
 ## Next Steps
 
-### Phase 2 (Future)
-- Add conflict resolution for simultaneous writes
-- Add automatic INDEX.md updates
-- Add statistics collection
-- Add knowledge comparison tool
+### Phase 2 (✅ NOW AVAILABLE)
+- [x] Add conflict resolution for simultaneous writes - `merge_knowledge.sh`
+- [x] Add automatic INDEX.md updates - `update_metadata.sh`
+- [x] Add statistics collection - `get_statistics.sh`
+- [x] Add knowledge comparison tool - `compare_knowledge.sh`
 
 ### Phase 3 (Future)
 - Add automatic pattern detection
@@ -480,6 +480,197 @@ chmod 775 $GENERO_AKR_BASE_PATH/*
 - Add workflow hooks for automatic retrieval/commit
 - Add audit trail
 - Add knowledge quality scoring
+
+---
+
+## Phase 2 Scripts (NEW)
+
+### 6. update_metadata.sh - Automatic Metadata Updates
+
+**Purpose:** Automatically update INDEX.md, statistics.md, and last_updated.txt when knowledge is committed.
+
+**Called by:** `commit_knowledge.sh` (automatically after successful commit)
+
+**Usage:**
+```bash
+bash update_metadata.sh --type TYPE --name NAME --action ACTION
+```
+
+**Options:**
+- `--type TYPE` - Type of artifact: function, file, module, pattern, issue
+- `--name NAME` - Name of artifact
+- `--action ACTION` - Action taken: create, append, update, deprecate
+
+**What it does:**
+- Updates INDEX.md with new artifact entry
+- Updates statistics.md with current counts
+- Updates last_updated.txt with timestamp
+- Uses file locking for concurrent safety
+
+**Example:**
+```bash
+# Automatically called by commit_knowledge.sh
+bash commit_knowledge.sh --type function --name "process_order" \
+  --findings findings.json --action create
+
+# Output includes:
+# [INFO] Updating metadata for function/process_order (action: create)
+# [INFO] Updated INDEX.md
+# [INFO] Updated statistics.md
+# [INFO] Updated last_updated.txt
+```
+
+---
+
+### 7. merge_knowledge.sh - Conflict Resolution
+
+**Purpose:** Merge conflicting knowledge documents when multiple agents write to same artifact simultaneously.
+
+**Usage:**
+```bash
+bash merge_knowledge.sh --type TYPE --name NAME --findings FILE
+```
+
+**Options:**
+- `--type TYPE` - Type of artifact: function, file, module, pattern, issue
+- `--name NAME` - Name of artifact
+- `--findings FILE` - New findings to merge
+
+**What it does:**
+- Detects conflicts (multiple agents writing to same artifact)
+- Merges findings intelligently
+- Preserves analysis history
+- Creates backup before merge
+- Updates last modified timestamp
+
+**Exit Codes:**
+- 0 - Success (merged)
+- 1 - Error
+- 2 - No conflict (no merge needed)
+
+**Example:**
+```bash
+# Agent 1 and Agent 2 both analyze process_order
+# Agent 1 commits first (succeeds)
+bash commit_knowledge.sh --type function --name "process_order" \
+  --findings agent1_findings.json --action create
+
+# Agent 2 tries to commit (detects conflict)
+bash commit_knowledge.sh --type function --name "process_order" \
+  --findings agent2_findings.json --action append
+
+# Merge happens automatically:
+# [INFO] Merging knowledge for function/process_order
+# [INFO] Merge complete for function/process_order
+```
+
+---
+
+### 8. compare_knowledge.sh - Knowledge Comparison
+
+**Purpose:** Compare current findings with existing knowledge to show what's new, changed, or the same.
+
+**Usage:**
+```bash
+bash compare_knowledge.sh --type TYPE --name NAME --findings FILE
+```
+
+**Options:**
+- `--type TYPE` - Type of artifact: function, file, module, pattern, issue
+- `--name NAME` - Name of artifact
+- `--findings FILE` - Current findings to compare
+
+**What it does:**
+- Compares metrics (complexity, LOC, dependents)
+- Shows what's new in findings
+- Shows what changed since last analysis
+- Generates comparison report
+- Helps agents decide on action (create/append/update)
+
+**Exit Codes:**
+- 0 - Success
+- 1 - Error
+- 2 - No existing knowledge (nothing to compare)
+
+**Example:**
+```bash
+# Before committing, compare with existing knowledge
+bash compare_knowledge.sh --type function --name "process_order" \
+  --findings current_findings.json
+
+# Output:
+# # Knowledge Comparison Report
+# 
+# **Artifact:** function/process_order
+# 
+# ## Metrics Comparison
+# 
+# | Metric | Existing | Current | Change |
+# |--------|----------|---------|--------|
+# | Complexity | 8 | 10 | ↑ +2 |
+# | Lines of Code | 50 | 55 | ↑ +5 |
+# | Dependent Count | 12 | 15 | ↑ +3 (new dependents) |
+```
+
+---
+
+### 9. get_statistics.sh - Adoption Metrics
+
+**Purpose:** Track adoption and usage metrics including document counts, agent activity, and trends.
+
+**Usage:**
+```bash
+bash get_statistics.sh [--format text|json|csv]
+```
+
+**Options:**
+- `--format FORMAT` - Output format: text (default), json, csv
+
+**What it does:**
+- Counts documents by type
+- Tracks agent activity
+- Shows adoption status
+- Generates reports in multiple formats
+
+**Example:**
+```bash
+# Get statistics in text format (default)
+bash get_statistics.sh
+
+# Output:
+# # AKR Statistics
+# 
+# **Generated:** 2026-03-30T14:22:15Z
+# 
+# ## Document Counts
+# 
+# | Type | Count |
+# |------|-------|
+# | Functions | 45 |
+# | Files | 12 |
+# | Modules | 8 |
+# | Patterns | 3 |
+# | Issues | 2 |
+# | **Total** | **70** |
+# 
+# ## Activity
+# 
+# | Metric | Value |
+# |--------|-------|
+# | Total Commits | 85 |
+# | Unique Agents | 5 |
+# | Last Updated | 2026-03-30T14:22:15Z |
+# 
+# ## Adoption Status
+# 
+# **Status:** Growing adoption (5-25% of codebase analyzed)
+
+# Get statistics in JSON format
+bash get_statistics.sh --format json
+
+# Get statistics in CSV format
+bash get_statistics.sh --format csv
+```
 
 ---
 
