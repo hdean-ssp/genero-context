@@ -93,6 +93,32 @@ Task Received
 
 ## Explicit Agent Behavior Rules
 
+### Rule 0: AKR First — Always
+
+**Before doing anything else on a task, check the AKR.**
+
+This is not optional. The AKR contains findings from previous agents that may save significant time and prevent repeated mistakes.
+
+```bash
+# Check for existing knowledge on every artifact you will touch
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "target_function"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type module --name "target_module"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type file --path "path/to/file.4gl"
+
+# Search for related issues that might affect your work
+bash ~/.kiro/scripts/search_knowledge.sh --category issues --query "target_function"
+bash ~/.kiro/scripts/search_knowledge.sh --category issues --query "error"
+```
+
+**What to do with AKR results:**
+- If knowledge exists → read it fully before querying genero-tools. Use it as your baseline.
+- If knowledge is empty → proceed with genero-tools, then commit your findings at the end.
+- If knowledge is stale (status: deprecated) → re-analyze and update with `--action update`.
+
+**AKR check is a hard gate.** Do not present a plan to the human without first checking the AKR.
+
+---
+
 ### Rule 1: Always Start with Planner Hat
 
 **When you receive a task:**
@@ -101,28 +127,20 @@ Task Received
 3. Do NOT skip planning
 4. Do NOT proceed to Builder Hat until human approves plan
 
-**Planner Hat Checklist:**
+**Planner Hat Checklist — ALL items required before presenting plan:**
+- [ ] AKR checked for all target artifacts (Rule 0)
+- [ ] Known issues from AKR reviewed
 - [ ] Task understood completely
-- [ ] Genero-tools queries executed to gather context
-- [ ] **AKR knowledge retrieved** (see genero-akr-workflow.md)
+- [ ] genero-tools queries executed to gather context
+- [ ] genero-tools output verified against source (Rule 3a)
 - [ ] Dependencies identified
 - [ ] Risks documented
 - [ ] Approach documented with clear steps
+- [ ] Audit log entry written
 - [ ] Plan presented to human
 - [ ] Human approval received
 
 **Do NOT proceed until all items are checked.**
-
-**Note on AKR (Phase 2):** When retrieving context, also check the Agent Knowledge Repository:
-```bash
-# Retrieve existing knowledge about target artifacts
-bash retrieve_knowledge.sh --type function --name "target_function"
-bash retrieve_knowledge.sh --type file --path "target_file.4gl"
-bash retrieve_knowledge.sh --type module --name "target_module"
-
-# This gives you refined context from previous agent analyses
-# See genero-akr-workflow.md for complete AKR workflow
-```
 
 ### Rule 2: Mandatory Approval Gates
 
@@ -147,28 +165,110 @@ bash retrieve_knowledge.sh --type module --name "target_module"
 
 **For every context need:**
 1. Try genero-tools query first
-2. If genero-tools succeeds → use result
+2. If genero-tools succeeds → use result, then verify (see Rule 3a)
 3. If genero-tools fails → use fallback (grep, sed, awk)
 4. Log which tool was used and why
 
 **Never skip genero-tools and go straight to grep.**
 
-### Rule 4: Document Everything
+### Rule 3a: Verify genero-tools Output — Never Take It as Absolute Truth
 
-**Logging Requirements:**
-- Log every genero-tools query and result
-- Log every fallback tool usage and reason
-- Log every decision point and rationale
-- Log every approval gate and human response
-- Use structured format: `[TIMESTAMP] [PHASE] [HAT] [ACTION] [RESULT]`
+**genero-tools is a powerful analysis tool, but its output reflects what it could extract from the database. Gaps, unknowns, and unresolved references are limitations of the tool's analysis — not necessarily problems in the 4GL code itself.**
 
-**Example:**
+**When genero-tools returns incomplete or uncertain data, investigate before drawing conclusions:**
+
+| genero-tools output | What it means | What to do |
+|---|---|---|
+| Unresolved LIKE reference | Tool couldn't resolve the type | Read the source `.4gl` and `.sch` files to find the actual type |
+| Empty dependency list | Tool found no calls | Verify by reading the function body in source |
+| Unknown variable type | Tool couldn't infer it | Check DEFINE statements and LIKE references in source |
+| Missing function | Not in database | Search source with `grep -r "FUNCTION name" --include="*.4gl"` |
+| Complexity seems wrong | Metric may be stale | Check if source file was modified after last database build |
+
+**Investigation workflow when output is incomplete:**
+
+```bash
+# 1. genero-tools returns unknown/unresolved result
+bash $BRODIR/etc/genero-tools/query.sh find-function-resolved "my_function"
+# → LIKE account.* unresolved
+
+# 2. Read the actual source to find the truth
+grep -n "LIKE\|DEFINE" path/to/file.4gl | grep -i "account"
+# → DEFINE rec LIKE account.*  (it's valid 4GL, tool just couldn't resolve the schema)
+
+# 3. Check the schema file if available
+find . -name "*.sch" | xargs grep -l "account" 2>/dev/null
+
+# 4. Document what you found
+# - If it's a tool limitation: note it as a tool gap, not a code issue
+# - If it's a genuine code issue: document it as a finding
 ```
-[2026-03-29T10:15:30Z] [INCEPTION] [PLANNER] Query: find-function "process_order" → Found, complexity=8
-[2026-03-29T10:15:45Z] [INCEPTION] [PLANNER] Query: find-function-dependents "process_order" → 12 dependents
-[2026-03-29T10:16:00Z] [INCEPTION] [PLANNER] Plan documented and presented to human
-[2026-03-29T10:20:00Z] [INCEPTION] [PLANNER] Human approval received
+
+**Critical distinction:**
+- `LIKE account.*` unresolved by genero-tools → **tool limitation** (schema not in database)
+- `LIKE account.*` where `account` table doesn't exist → **genuine code issue**
+
+**Always read the source to determine which it is. Do not report tool gaps as code defects.**
+
+**Log tool gaps to the AKR so future agents know:**
+```bash
+cat > /tmp/gap_findings.json << 'EOF'
+{
+  "summary": "genero-tools cannot resolve LIKE account.* — schema not indexed",
+  "key_findings": [
+    "LIKE account.* appears in 3 functions",
+    "Schema file not found in genero-tools database",
+    "Source code is valid — account table exists in production schema"
+  ],
+  "metrics": {"complexity": 0, "lines_of_code": 0, "parameter_count": 0, "dependent_count": 0},
+  "known_issues": ["genero-tools cannot resolve account schema — not a code defect"],
+  "recommendations": ["Add account.sch to genero-tools database to enable type resolution"]
+}
+EOF
+bash ~/.kiro/scripts/commit_knowledge.sh --type issue --name "tool_gap_account_schema" --findings /tmp/gap_findings.json --action create
 ```
+
+### Rule 4: Maintain a Continuous Audit Trail
+
+**Every action must be logged. This is not optional.**
+
+The audit trail is how the team knows what was done, what was found, and why decisions were made. It feeds the AKR and enables future agents to build on your work rather than repeat it.
+
+**Log every single one of these:**
+- AKR retrieval (what was found, what was missing)
+- Every genero-tools query and its result
+- Every fallback tool use and the reason genero-tools wasn't sufficient
+- Every case where genero-tools output was incomplete and what investigation you did
+- Every decision point and the rationale
+- Every approval gate — the prompt you presented and the human's response
+- Any errors or tool failures
+
+**Format — use this exactly:**
+```
+[TIMESTAMP] [PHASE] [HAT] [ACTION] [RESULT]
+```
+
+**Concrete examples:**
+```
+[2026-03-31T10:00:00Z] [INCEPTION] [PLANNER] AKR: retrieve function/process_order → Found, complexity=8, 12 dependents known
+[2026-03-31T10:00:05Z] [INCEPTION] [PLANNER] AKR: search issues "process_order" → 1 issue: type_resolution_account_schema
+[2026-03-31T10:00:10Z] [INCEPTION] [PLANNER] Query: find-function "process_order" → complexity=10, LOC=55
+[2026-03-31T10:00:15Z] [INCEPTION] [PLANNER] Query: find-function-dependents "process_order" → 15 dependents
+[2026-03-31T10:00:20Z] [INCEPTION] [PLANNER] Query: find-function-resolved "process_order" → LIKE account.* unresolved
+[2026-03-31T10:00:25Z] [INCEPTION] [PLANNER] Investigate: grep DEFINE in orders.4gl → account.* is valid LIKE reference, schema not indexed
+[2026-03-31T10:00:30Z] [INCEPTION] [PLANNER] Conclusion: unresolved type is tool gap, not code defect
+[2026-03-31T10:01:00Z] [INCEPTION] [PLANNER] Plan presented to human
+[2026-03-31T10:05:00Z] [INCEPTION] [PLANNER] Human approval received
+[2026-03-31T10:05:05Z] [CONSTRUCTION] [BUILDER] Starting implementation
+[2026-03-31T10:15:00Z] [CONSTRUCTION] [BUILDER] Implementation complete
+[2026-03-31T10:15:05Z] [CONSTRUCTION] [BUILDER] Work presented for review
+[2026-03-31T10:20:00Z] [CONSTRUCTION] [BUILDER] Human review received
+[2026-03-31T10:20:05Z] [OPERATION] [REVIEWER] Validation complete: PASS
+[2026-03-31T10:20:10Z] [OPERATION] [REVIEWER] AKR: commit function/process_order → appended findings
+[2026-03-31T10:20:15Z] [OPERATION] [REVIEWER] Task approved by human
+```
+
+**At the end of every task, commit your audit findings to the AKR.** If you investigated something and found it was a tool gap, that knowledge belongs in the AKR so the next agent doesn't repeat the investigation.
 
 ### Rule 5: Follow Existing Patterns
 
@@ -468,13 +568,17 @@ If changes needed:
 
 ### Before Proceeding to Builder Hat
 
-**Verify Planner Hat completed:**
+**Verify Planner Hat completed — ALL required:**
 ```
-✓ Task understood
-✓ Genero-tools queries executed
+✓ AKR checked for all target artifacts
+✓ Known AKR issues reviewed
+✓ genero-tools queries executed
+✓ genero-tools output verified against source where incomplete
+✓ Tool gaps distinguished from code defects
 ✓ Dependencies identified
 ✓ Risks documented
 ✓ Approach documented
+✓ Audit log entries written
 ✓ Plan presented to human
 ✓ Human approval received
 ```
@@ -483,12 +587,13 @@ If changes needed:
 
 ### Before Proceeding to Reviewer Hat
 
-**Verify Builder Hat completed:**
+**Verify Builder Hat completed — ALL required:**
 ```
 ✓ Plan executed
 ✓ Changes implemented
 ✓ Code tested
 ✓ Dependents tested
+✓ Audit log entries written for all actions
 ✓ Results documented
 ✓ Work presented to human
 ✓ Human review received
@@ -498,13 +603,16 @@ If changes needed:
 
 ### Before Marking Task Complete
 
-**Verify Reviewer Hat completed:**
+**Verify Reviewer Hat completed — ALL required:**
 ```
 ✓ Quality validated
 ✓ Regressions checked
 ✓ Standards verified
 ✓ Requirements met
-✓ Validation results documented
+✓ AKR updated with findings (append or create)
+✓ Tool gaps logged to AKR as issues
+✓ Errors logged to AKR as issues
+✓ Audit log complete
 ✓ Human approval received
 ```
 
@@ -552,67 +660,66 @@ If changes needed:
 **Wrong**: Proceed to next phase without human approval
 **Right**: Wait for explicit human approval at each gate
 
-### ❌ Mistake 3: Not Using genero-tools
+### ❌ Mistake 3: Not Checking the AKR
+**Wrong**: Start querying genero-tools without first checking the AKR
+**Right**: AKR first, always. Check for existing knowledge and known issues before anything else
+
+### ❌ Mistake 4: Not Using genero-tools
 **Wrong**: Use grep immediately without trying genero-tools
 **Right**: Always try genero-tools first, use fallback only if needed
 
-### ❌ Mistake 4: Incomplete Planning
-**Wrong**: Present vague plan without full context
-**Right**: Present detailed plan with dependencies, risks, and approach
+### ❌ Mistake 5: Treating genero-tools Output as Absolute Truth
+**Wrong**: Report an unresolved LIKE reference as a code defect without investigating
+**Right**: When genero-tools returns incomplete data, read the source to determine if it's a tool gap or a real issue. Never report tool limitations as code problems.
 
-### ❌ Mistake 5: Not Verifying Impact
+### ❌ Mistake 6: Not Verifying Impact
 **Wrong**: Complete work without checking dependents
 **Right**: Query genero-tools to verify all dependents still work
 
-### ❌ Mistake 6: Poor Documentation
-**Wrong**: No logging of decisions and queries
-**Right**: Log everything with timestamps and structured format
+### ❌ Mistake 7: Incomplete Audit Trail
+**Wrong**: Skip logging, or only log some actions
+**Right**: Log every AKR check, every query, every investigation, every decision, every gate. The audit trail is mandatory.
 
-### ❌ Mistake 7: Ignoring Existing Patterns
-**Wrong**: Implement in new way without studying existing code
+### ❌ Mistake 8: Ignoring Existing Patterns
+**Wrong**: Implement in a new way without studying existing code
 **Right**: Query genero-tools to find similar functions and follow patterns
 
-### ❌ Mistake 8: Analyzing Compiled Files
+### ❌ Mistake 9: Analyzing Compiled Files
 **Wrong**: Try to analyze or modify .42f, .42m, .42r files
 **Right**: Always work with source files (.4gl) only
 
-### ❌ Mistake 9: Not Using AKR
-**Wrong**: Start analysis from scratch without checking existing knowledge
-**Right**: Always retrieve existing knowledge from AKR first (see genero-akr-workflow.md)
+### ❌ Mistake 10: Not Committing Findings to AKR
+**Wrong**: Complete a task without updating the AKR
+**Right**: Always commit findings at the end of every task — including tool gaps, errors, and patterns discovered
 
-**AKR Commands:**
-```bash
-bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "target_function"
-bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "target_function" --findings findings.json
-bash ~/.kiro/scripts/get_statistics.sh
-```
+### ❌ Mistake 11: Operating Outside the Codebase Without Permission
+**Wrong**: Run commands against system paths or commit to version control without asking
+**Right**: Stay within the codebase. Ask for explicit permission before any operation outside it.
 
-### ❌ Mistake 10: Operating Outside the Codebase Without Permission
-**Wrong**: Run commands against system paths, commit to version control, or access files outside the user's codebase without asking
-**Right**: Stay within the codebase directory. Ask for explicit permission before any operation outside it.
-
-### ❌ Mistake 11: Not Logging Errors to AKR
-**Wrong**: Encounter a recurring error or tool failure and move on silently
-**Right**: Log errors as AKR issues so future agents are aware. See genero-context-operations.md for the error logging workflow.
+### ❌ Mistake 12: Not Logging Tool Gaps as AKR Issues
+**Wrong**: Encounter an unresolved type or missing function in genero-tools and move on silently
+**Right**: Investigate the gap, determine if it's a tool limitation or a real issue, and log it to the AKR either way
 
 ---
 
 ## Success Criteria
 
-**A task is successfully completed when:**
+**A task is successfully completed when ALL of the following are true:**
 
-1. ✓ Planner Hat phase completed with human approval
-2. ✓ Builder Hat phase completed with human review
-3. ✓ Reviewer Hat phase completed with human approval
-4. ✓ All genero-tools queries logged
-5. ✓ All fallback tool usage logged with reasons
-6. ✓ All approval gates documented
-7. ✓ All changes verified against dependents
-8. ✓ All standards compliance verified
-9. ✓ No regressions detected
-10. ✓ Task marked complete by human
-11. ✓ All operations stayed within the codebase (or explicit permission obtained)
-12. ✓ Any errors or tool failures logged to AKR as issues
+1. ✓ AKR checked at task start (Rule 0)
+2. ✓ Planner Hat phase completed with human approval
+3. ✓ Builder Hat phase completed with human review
+4. ✓ Reviewer Hat phase completed with human approval
+5. ✓ All genero-tools queries logged with results
+6. ✓ All incomplete/unknown genero-tools output investigated against source
+7. ✓ Tool gaps distinguished from code defects and documented
+8. ✓ All fallback tool usage logged with reasons
+9. ✓ All approval gates logged with human responses
+10. ✓ All changes verified against dependents
+11. ✓ AKR updated with findings from this task
+12. ✓ Tool gaps and errors committed to AKR as issues
+13. ✓ All operations stayed within the codebase (or explicit permission obtained)
+14. ✓ Task marked complete by human
 
 **If any criterion is not met, task is not complete.**
 

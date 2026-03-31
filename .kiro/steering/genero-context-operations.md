@@ -6,6 +6,122 @@
 
 ---
 
+## Handling Incomplete genero-tools Output
+
+**genero-tools reflects what it could extract and index. Gaps are normal and expected — they are not automatically code defects.**
+
+### The Investigation Obligation
+
+When genero-tools returns incomplete, unknown, or unresolved data, you are **required** to investigate before drawing any conclusion. Do not report a tool limitation as a code problem.
+
+### Common Gaps and How to Investigate
+
+#### Unresolved LIKE Reference
+
+```
+genero-tools output: LIKE account.* → unresolved
+```
+
+**This means**: The schema for `account` was not in the genero-tools database when it was built.
+
+**Investigate:**
+```bash
+# 1. Find the DEFINE statement in source
+grep -n "LIKE account\." path/to/file.4gl
+
+# 2. Look for the schema file
+find . -name "*.sch" | xargs grep -l "account" 2>/dev/null
+find $BRODIR -name "account.sch" 2>/dev/null
+
+# 3. Check if the table is referenced elsewhere
+grep -r "account\." --include="*.4gl" | head -10
+```
+
+**Conclusion:**
+- If schema file exists and table is valid → **tool gap** (schema not indexed). Note it, don't flag as defect.
+- If no schema and no evidence of table → **potential code issue**. Investigate further.
+
+#### Empty Dependency List
+
+```
+genero-tools output: find-function-dependencies "my_function" → []
+```
+
+**This means**: genero-tools found no CALL statements it could resolve.
+
+**Investigate:**
+```bash
+# Read the actual function body
+grep -n "CALL\|LET.*=.*(" path/to/file.4gl | sed -n '/FUNCTION my_function/,/END FUNCTION/p'
+
+# Or extract the full function
+sed -n '/^FUNCTION my_function/,/^END FUNCTION/p' path/to/file.4gl
+```
+
+**Conclusion:**
+- If function body has CALL statements → **tool gap** (calls not indexed). List them manually.
+- If function body has no calls → result is correct.
+
+#### Missing Function
+
+```
+genero-tools output: find-function "my_function" → not found
+```
+
+**Investigate:**
+```bash
+# Search source files directly
+grep -rn "FUNCTION my_function\|PRIVATE FUNCTION my_function" --include="*.4gl"
+
+# Check if it might be in a different module
+grep -rn "my_function" --include="*.4gl" | grep -v "CALL\|#"
+```
+
+**Conclusion:**
+- If found in source → **tool gap** (file not indexed). Use grep result.
+- If not found anywhere → function genuinely doesn't exist.
+
+#### Unexpected Complexity Value
+
+```
+genero-tools output: complexity=3 (but function looks complex)
+```
+
+**Investigate:**
+```bash
+# Count decision points manually
+grep -c "IF\|WHILE\|FOR\|CASE\|WHEN\|AND\|OR" path/to/file.4gl
+```
+
+**Conclusion:**
+- If manual count differs significantly → database may be stale. Note it.
+
+### Logging Tool Gaps to AKR
+
+Every tool gap you discover should be logged so future agents don't repeat the investigation:
+
+```bash
+cat > /tmp/gap.json << 'EOF'
+{
+  "summary": "genero-tools cannot resolve LIKE account.* — schema not indexed",
+  "key_findings": [
+    "LIKE account.* appears in functions: process_order, validate_order",
+    "account.sch not found in genero-tools database path",
+    "Source code is valid — account table confirmed in production schema via grep"
+  ],
+  "metrics": {"complexity": 0, "lines_of_code": 0, "parameter_count": 0, "dependent_count": 0},
+  "known_issues": ["genero-tools cannot resolve account schema — this is a tool indexing gap, not a code defect"],
+  "recommendations": [
+    "Add account.sch to genero-tools database to enable type resolution",
+    "When encountering LIKE account.* treat as valid until schema is indexed"
+  ]
+}
+EOF
+bash ~/.kiro/scripts/commit_knowledge.sh --type issue --name "tool_gap_account_schema" --findings /tmp/gap.json --action create
+```
+
+---
+
 ## AKR Error Logging
 
 **MANDATORY: All significant errors must be logged to the AKR as issues.**
