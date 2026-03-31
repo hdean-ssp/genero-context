@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Deduplication Check Before Retrieval",
+  "description": "Before retrieving AKR knowledge, reminds agents to use the deduplication workflow to search for existing knowledge and prevent duplicates",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      ".*retrieve_knowledge.*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before retrieving AKR knowledge, use the AKR Management Specialist skill's deduplication workflow:\n\n1. **Search for existing knowledge**: Use `bash search_knowledge.sh --query \"[artifact_name]\"` to check if knowledge already exists\n2. **Search for similar names**: Look for naming variations (e.g., process_order vs processOrder)\n3. **Search for related artifacts**: Find related knowledge that might be duplicates\n\nThis prevents creating duplicate entries and helps you decide whether to create new knowledge or append to existing."
+  }
+}

@@ -69,7 +69,7 @@ get_knowledge_file() {
       ;;
     file)
       # Convert path to filename (replace / with _)
-      local filename=$(echo "$path" | sed 's/\//_/g')
+      local filename=$(echo "$path" | /bin/sed 's/\//_/g')
       echo "${GENERO_AKR_FILES}/${filename}.md"
       ;;
     module)
@@ -162,6 +162,9 @@ if [ ! -f "$KNOWLEDGE_FILE" ]; then
 fi
 
 log_debug "Found knowledge file, displaying content"
-cat "$KNOWLEDGE_FILE"
+log_debug "Knowledge file path: $KNOWLEDGE_FILE"
+log_debug "Knowledge file exists: $([ -f "$KNOWLEDGE_FILE" ] && echo YES || echo NO)"
+log_debug "About to execute: cat $KNOWLEDGE_FILE"
+/bin/cat "$KNOWLEDGE_FILE"
 
 exit 0

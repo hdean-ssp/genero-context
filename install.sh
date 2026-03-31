@@ -4,12 +4,14 @@
 # install.sh - Install Genero Framework to user's Kiro directory
 #
 # Purpose: Copy framework files to user's .kiro directory with backup/archive
-#          of previous versions for safety
+#          of previous versions for safety. Also verifies genero-tools is
+#          available and provides installation instructions if needed.
 #
-# Usage: bash install.sh [--force]
+# Usage: bash install.sh [--force] [--skip-genero-check]
 #
 # Parameters:
-#   --force     Skip confirmation prompts
+#   --force              Skip confirmation prompts
+#   --skip-genero-check  Skip genero-tools verification
 #
 # Exit Codes:
 #   0 - Success
@@ -28,6 +30,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 FORCE=0
+SKIP_GENERO_CHECK=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KIRO_DIR="${HOME}/.kiro"
 BACKUP_DIR="${KIRO_DIR}/.backup/$(date +%Y%m%d_%H%M%S)"
@@ -36,6 +39,7 @@ BACKUP_DIR="${KIRO_DIR}/.backup/$(date +%Y%m%d_%H%M%S)"
 while [[ $# -gt 0 ]]; do
     case $1 in
         --force) FORCE=1; shift ;;
+        --skip-genero-check) SKIP_GENERO_CHECK=1; shift ;;
         *) shift ;;
     esac
 done
@@ -68,10 +72,93 @@ confirm() {
     [[ "$response" =~ ^[Yy]$ ]]
 }
 
+check_genero_tools() {
+    print_header "Checking genero-tools Installation"
+    
+    # Check if BRODIR is set
+    if [[ -z "$BRODIR" ]]; then
+        print_warning "BRODIR environment variable not set"
+        echo "Attempting to find Genero installation..."
+        
+        # Try common locations
+        if [[ -d "/opt/genero" ]]; then
+            export BRODIR="/opt/genero"
+            print_success "Found Genero at /opt/genero"
+        elif [[ -d "/usr/local/genero" ]]; then
+            export BRODIR="/usr/local/genero"
+            print_success "Found Genero at /usr/local/genero"
+        else
+            print_error "Could not find Genero installation"
+            echo ""
+            echo "Please set BRODIR environment variable:"
+            echo "  export BRODIR=/path/to/genero"
+            echo ""
+            return 1
+        fi
+    fi
+    
+    # Check if genero-tools exists
+    if [[ -d "$BRODIR/etc/genero-tools" ]]; then
+        print_success "genero-tools found at $BRODIR/etc/genero-tools"
+        
+        # Check if query.sh exists
+        if [[ -f "$BRODIR/etc/genero-tools/query.sh" ]]; then
+            print_success "query.sh found"
+            
+            # Try to get version
+            if "$BRODIR/etc/genero-tools/query.sh" --version &>/dev/null; then
+                local version=$("$BRODIR/etc/genero-tools/query.sh" --version 2>/dev/null || echo "unknown")
+                print_success "genero-tools version: $version"
+            else
+                print_warning "Could not determine genero-tools version"
+            fi
+        else
+            print_warning "query.sh not found in genero-tools directory"
+        fi
+        
+        return 0
+    else
+        print_error "genero-tools not found at $BRODIR/etc/genero-tools"
+        echo ""
+        echo "genero-tools is required for full framework functionality."
+        echo ""
+        echo "To install genero-tools:"
+        echo "1. Download genero-tools from your Genero distribution"
+        echo "2. Extract to the standard location:"
+        echo "   sudo mkdir -p $BRODIR/etc/genero-tools"
+        echo "   sudo tar -xzf genero-tools-*.tar.gz -C $BRODIR/etc/genero-tools"
+        echo ""
+        echo "3. Set permissions:"
+        echo "   sudo chmod 755 $BRODIR/etc/genero-tools"
+        echo "   sudo chmod 755 $BRODIR/etc/genero-tools/*"
+        echo ""
+        echo "4. Verify installation:"
+        echo "   $BRODIR/etc/genero-tools/query.sh --version"
+        echo ""
+        
+        if ! confirm "Continue installation without genero-tools?"; then
+            print_error "Installation cancelled"
+            return 1
+        fi
+        
+        print_warning "Continuing without genero-tools (limited functionality)"
+        return 0
+    fi
+}
+
 # Main installation
 main() {
     print_header "Genero Framework Installation"
     echo ""
+    
+    # Step 0: Check genero-tools (unless skipped)
+    if [[ $SKIP_GENERO_CHECK -eq 0 ]]; then
+        if ! check_genero_tools; then
+            print_error "genero-tools check failed"
+            exit 1
+        fi
+        echo ""
+    fi
     
     # Step 1: Check if repo is up to date
     print_header "Step 1: Checking Repository"
@@ -116,12 +203,17 @@ main() {
         ".kiro/scripts/search_knowledge.sh"
         ".kiro/scripts/validate_knowledge.sh"
         ".kiro/scripts/akr-config.sh"
-        ".kiro/AKR_QUICK_START.md"
-        ".kiro/AKR_SCRIPTS_README.md"
         ".kiro/steering/genero-akr-workflow.md"
         ".kiro/steering/genero-context-workflow.md"
         ".kiro/steering/genero-context-operations.md"
         ".kiro/steering/genero-context-queries.md"
+        ".kiro/skills/akr-management-specialist.md"
+        ".kiro/skills/akr-management-training.md"
+        ".kiro/skills/akr-management-quick-reference.md"
+        ".kiro/hooks/AKR_MANAGEMENT_HOOKS.md"
+        ".kiro/hooks/akr-management-auto-activate.kiro.hook"
+        ".kiro/hooks/akr-management-post-commit-validate.kiro.hook"
+        ".kiro/hooks/akr-management-pre-retrieve-dedup.kiro.hook"
     )
     
     local missing_files=0
@@ -152,12 +244,17 @@ main() {
     print_header "Step 5: Backing Up Existing Files"
     
     local files_to_backup=(
-        "AKR_QUICK_START.md"
-        "AKR_SCRIPTS_README.md"
         "steering/genero-akr-workflow.md"
         "steering/genero-context-workflow.md"
         "steering/genero-context-operations.md"
         "steering/genero-context-queries.md"
+        "skills/akr-management-specialist.md"
+        "skills/akr-management-training.md"
+        "skills/akr-management-quick-reference.md"
+        "hooks/AKR_MANAGEMENT_HOOKS.md"
+        "hooks/akr-management-auto-activate.kiro.hook"
+        "hooks/akr-management-post-commit-validate.kiro.hook"
+        "hooks/akr-management-pre-retrieve-dedup.kiro.hook"
     )
     
     local backed_up=0
@@ -178,9 +275,11 @@ main() {
     # Step 6: Copy framework files
     print_header "Step 6: Installing Framework Files"
     
-    # Create scripts directory
+    # Create directories
     mkdir -p "$KIRO_DIR/scripts"
     mkdir -p "$KIRO_DIR/steering"
+    mkdir -p "$KIRO_DIR/skills"
+    mkdir -p "$KIRO_DIR/hooks"
     
     # Copy scripts
     echo "Copying scripts..."
@@ -188,17 +287,38 @@ main() {
     chmod +x "$KIRO_DIR/scripts"/*.sh
     print_success "Scripts installed"
     
-    # Copy documentation
+    # Copy scripts README
     echo "Copying documentation..."
-    cp "$SCRIPT_DIR/.kiro/AKR_QUICK_START.md" "$KIRO_DIR/"
-    cp "$SCRIPT_DIR/.kiro/AKR_SCRIPTS_README.md" "$KIRO_DIR/"
-    cp "$SCRIPT_DIR/.kiro/scripts/README.md" "$KIRO_DIR/scripts/"
+    [[ -f "$SCRIPT_DIR/.kiro/scripts/README.md" ]] && cp "$SCRIPT_DIR/.kiro/scripts/README.md" "$KIRO_DIR/scripts/"
     print_success "Documentation installed"
     
     # Copy steering files
     echo "Copying steering files..."
     cp "$SCRIPT_DIR/.kiro/steering"/*.md "$KIRO_DIR/steering/"
     print_success "Steering files installed"
+    
+    # Copy skills
+    echo "Copying Kiro skills..."
+    if [[ -d "$SCRIPT_DIR/.kiro/skills" ]]; then
+        cp "$SCRIPT_DIR/.kiro/skills"/*.md "$KIRO_DIR/skills/"
+        cp "$SCRIPT_DIR/.kiro/skills/README.md" "$KIRO_DIR/skills/" 2>/dev/null || true
+        cp "$SCRIPT_DIR/.kiro/skills/INDEX.md" "$KIRO_DIR/skills/" 2>/dev/null || true
+        cp "$SCRIPT_DIR/.kiro/skills/ACTIVATION_GUIDE.md" "$KIRO_DIR/skills/" 2>/dev/null || true
+        print_success "Kiro skills installed"
+    else
+        print_warning "Skills directory not found"
+    fi
+    
+    # Copy hooks
+    echo "Copying Kiro hooks..."
+    if [[ -d "$SCRIPT_DIR/.kiro/hooks" ]]; then
+        cp "$SCRIPT_DIR/.kiro/hooks"/*.md "$KIRO_DIR/hooks/"
+        cp "$SCRIPT_DIR/.kiro/hooks"/*.kiro.hook "$KIRO_DIR/hooks/" 2>/dev/null || true
+        chmod +x "$KIRO_DIR/hooks"/*.kiro.hook 2>/dev/null || true
+        print_success "Kiro hooks installed"
+    else
+        print_warning "Hooks directory not found"
+    fi
     
     # Step 7: Verify installation
     print_header "Step 7: Verifying Installation"
@@ -225,21 +345,28 @@ main() {
     echo "Framework installed to: $KIRO_DIR"
     echo ""
     echo "Next steps:"
-    echo "1. Read the quick start guide:"
-    echo "   cat $KIRO_DIR/AKR_QUICK_START.md"
     echo ""
-    echo "2. Initialize AKR (admin only):"
+    echo "1. Initialize AKR (admin only, run once):"
     echo "   bash $KIRO_DIR/scripts/setup_akr.sh"
     echo ""
-    echo "3. Verify setup:"
+    echo "2. Verify setup:"
     echo "   bash $KIRO_DIR/scripts/validate_knowledge.sh"
     echo ""
-    echo "4. Start using AKR:"
+    echo "3. Start using AKR:"
     echo "   bash $KIRO_DIR/scripts/retrieve_knowledge.sh --type function --name \"my_function\""
+    echo ""
+    echo "4. Script reference:"
+    echo "   cat $KIRO_DIR/scripts/README.md"
+    echo ""
+    echo "Installed components:"
+    echo "   Scripts:  $KIRO_DIR/scripts/"
+    echo "   Steering: $KIRO_DIR/steering/"
+    echo "   Skills:   $KIRO_DIR/skills/"
+    echo "   Hooks:    $KIRO_DIR/hooks/"
     echo ""
     
     if [[ $backed_up -gt 0 ]]; then
-        echo "Backup location: $BACKUP_DIR"
+        echo "Previous files backed up to: $BACKUP_DIR"
         echo ""
     fi
     

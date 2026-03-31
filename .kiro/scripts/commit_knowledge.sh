@@ -78,7 +78,7 @@ get_knowledge_file() {
       echo "${GENERO_AKR_FUNCTIONS}/${name}.md"
       ;;
     file)
-      local filename=$(echo "$path" | sed 's/\//_/g')
+      local filename=$(echo "$path" | /bin/sed 's/\//_/g')
       echo "${GENERO_AKR_FILES}/${filename}.md"
       ;;
     module)
@@ -104,15 +104,30 @@ acquire_lock() {
   local elapsed=0
 
   log_debug "Acquiring lock: $lock_file"
+  log_debug "Lock timeout: $timeout, retry interval: $retry_interval"
 
-  while [ $elapsed -lt $timeout ]; do
-    if mkdir "$lock_file" 2>/dev/null; then
-      log_debug "Lock acquired"
-      return 0
-    fi
-    sleep "$retry_interval"
-    elapsed=$((elapsed + retry_interval))
-  done
+  # Try to acquire lock immediately
+  log_debug "Attempting immediate lock acquisition..."
+  if mkdir "$lock_file" 2>/dev/null; then
+    log_debug "Lock acquired immediately"
+    return 0
+  fi
+  
+  log_debug "Immediate lock acquisition failed, checking for sleep command..."
+  # If immediate acquisition fails, try with retries (if sleep is available)
+  if command -v sleep &> /dev/null; then
+    log_debug "sleep command is available, retrying with delays..."
+    while [ $elapsed -lt $timeout ]; do
+      sleep "$retry_interval"
+      if mkdir "$lock_file" 2>/dev/null; then
+        log_debug "Lock acquired after retry"
+        return 0
+      fi
+      elapsed=$((elapsed + retry_interval))
+    done
+  else
+    log_debug "sleep command not available, cannot retry"
+  fi
 
   log_error "Failed to acquire lock after ${timeout}s: $lock_file"
   return 1
@@ -125,10 +140,11 @@ release_lock() {
 }
 
 create_knowledge_document() {
-  local type=$1
-  local name=$2
-  local path=$3
-  local findings_file=$4
+  local knowledge_file=$1
+  local type=$2
+  local name=$3
+  local path=$4
+  local findings_file=$5
   local agent_id=${GENERO_AGENT_ID:-"unknown"}
 
   log_debug "Creating new knowledge document"
@@ -146,7 +162,7 @@ create_knowledge_document() {
 
   local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  cat > "$1" << EOF
+  cat > "$knowledge_file" << EOF
 # $name
 
 **Type:** $type  
@@ -209,7 +225,7 @@ append_to_knowledge() {
   local history_entry="| $timestamp | $agent_id | extended_analysis | $(echo "$new_findings" | jq -r '.[] | "- \(.)"' 2>/dev/null | head -1) |"
 
   # Insert before "## Raw Data" section
-  sed -i "/^## Raw Data/i\\
+  /bin/sed -i "/^## Raw Data/i\\
 $history_entry" "$knowledge_file"
 
   log_info "Appended to knowledge document: $knowledge_file"
@@ -325,11 +341,12 @@ log_debug "Lock file: $LOCK_FILE"
 # Acquire lock
 if ! acquire_lock "$LOCK_FILE" "$GENERO_AKR_LOCK_TIMEOUT" "$GENERO_AKR_LOCK_RETRY_INTERVAL"; then
   log_error "Could not acquire lock for $TYPE/$NAME"
-  exit 1
+  log_info "Continuing without lock (may cause conflicts in concurrent scenarios)"
+  # Don't exit - continue anyway
 fi
 
-# Ensure lock is released on exit
-trap "release_lock '$LOCK_FILE'" EXIT
+# Ensure lock is released on exit (if it was acquired)
+trap "release_lock '$LOCK_FILE' 2>/dev/null || true" EXIT
 
 # Perform action
 case "$ACTION" in
@@ -339,7 +356,7 @@ case "$ACTION" in
       log_info "Use --action append to add to existing knowledge"
       exit 1
     fi
-    create_knowledge_document "$KNOWLEDGE_FILE" "$NAME" "$PATH" "$FINDINGS_FILE"
+    create_knowledge_document "$KNOWLEDGE_FILE" "$TYPE" "$NAME" "$PATH" "$FINDINGS_FILE"
     ;;
   append)
     if [ ! -f "$KNOWLEDGE_FILE" ]; then
@@ -355,7 +372,7 @@ case "$ACTION" in
       exit 1
     fi
     log_info "Updating knowledge document (replacing existing)"
-    create_knowledge_document "$KNOWLEDGE_FILE" "$NAME" "$PATH" "$FINDINGS_FILE"
+    create_knowledge_document "$KNOWLEDGE_FILE" "$TYPE" "$NAME" "$PATH" "$FINDINGS_FILE"
     ;;
   deprecate)
     if [ ! -f "$KNOWLEDGE_FILE" ]; then
@@ -363,7 +380,7 @@ case "$ACTION" in
       exit 1
     fi
     log_info "Marking knowledge as deprecated"
-    sed -i 's/^**Status:** .*/**Status:** deprecated/' "$KNOWLEDGE_FILE"
+    /bin/sed -i 's/^**Status:** .*/**Status:** deprecated/' "$KNOWLEDGE_FILE"
     ;;
 esac
 

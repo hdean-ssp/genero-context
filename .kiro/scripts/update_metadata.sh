@@ -148,7 +148,7 @@ EOF
         functions_list=$(find "${GENERO_AKR_FUNCTIONS}" -name "*.md" -type f | \
             xargs -I {} basename {} .md | \
             sort | \
-            sed 's/^/- /' | \
+            /bin/sed 's/^/- /' | \
             head -20)
         if [[ $func_count -gt 20 ]]; then
             functions_list="${functions_list}
@@ -162,15 +162,15 @@ EOF
     local recent_list="- $ARTIFACT_TYPE/$ARTIFACT_NAME ($ACTION) - $timestamp by $agent_id"
     
     # Update INDEX.md with new values
-    sed -i "s|\[TIMESTAMP\]|$timestamp|g" "$index_file"
-    sed -i "s|\[TOTAL\]|$total|g" "$index_file"
-    sed -i "s|\[FUNC_COUNT\]|$func_count|g" "$index_file"
-    sed -i "s|\[FILE_COUNT\]|$file_count|g" "$index_file"
-    sed -i "s|\[MOD_COUNT\]|$mod_count|g" "$index_file"
-    sed -i "s|\[PAT_COUNT\]|$pat_count|g" "$index_file"
-    sed -i "s|\[ISS_COUNT\]|$iss_count|g" "$index_file"
-    sed -i "s|\[FUNCTIONS\]|$functions_list|g" "$index_file"
-    sed -i "s|\[RECENT\]|$recent_list|g" "$index_file"
+    /bin/sed -i "s|\[TIMESTAMP\]|$timestamp|g" "$index_file"
+    /bin/sed -i "s|\[TOTAL\]|$total|g" "$index_file"
+    /bin/sed -i "s|\[FUNC_COUNT\]|$func_count|g" "$index_file"
+    /bin/sed -i "s|\[FILE_COUNT\]|$file_count|g" "$index_file"
+    /bin/sed -i "s|\[MOD_COUNT\]|$mod_count|g" "$index_file"
+    /bin/sed -i "s|\[PAT_COUNT\]|$pat_count|g" "$index_file"
+    /bin/sed -i "s|\[ISS_COUNT\]|$iss_count|g" "$index_file"
+    /bin/sed -i "s|\[FUNCTIONS\]|$functions_list|g" "$index_file"
+    /bin/sed -i "s|\[RECENT\]|$recent_list|g" "$index_file"
     
     log_info "Updated INDEX.md"
 }

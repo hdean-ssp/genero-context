@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Auto-Activate AKR Management Specialist",
+  "description": "Automatically activates the AKR Management Specialist skill whenever an agent commits to or changes the AKR, ensuring deduplication, structure integrity, and sentiment analysis are always applied",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      ".*commit_knowledge.*|.*merge_knowledge.*|.*update_metadata.*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before proceeding with this AKR operation, activate the \"AKR Management Specialist\" skill to ensure:\n1. No duplicate knowledge entries are created\n2. Document structure is valid and complete\n3. All findings are objective and evidence-based (no bias)\n\nUse the skill's deduplication workflow, structure validation, and sentiment analysis to guide this operation. Reference the quick checklist before committing."
+  }
+}

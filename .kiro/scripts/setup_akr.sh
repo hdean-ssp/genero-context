@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/akr-config.sh"
 
 # ============================================================================
-# Functions
+# Dependency Verification
 # ============================================================================
 
 log_info() {
@@ -24,6 +24,31 @@ log_error() {
 log_success() {
   echo "[SUCCESS] $*"
 }
+
+log_warning() {
+  echo "[WARNING] $*"
+}
+
+# Verify dependencies before proceeding
+log_info "Verifying dependencies..."
+DEPENDENCY_STATUS=$(get_dependency_status)
+
+if [ "$DEPENDENCY_STATUS" = "MISSING_REQUIRED" ]; then
+  log_error "Missing required dependencies. Cannot proceed."
+  verify_dependencies
+  exit 1
+fi
+
+if [ "$DEPENDENCY_STATUS" = "MISSING_OPTIONAL" ]; then
+  log_warning "Missing optional dependencies. Framework will work with limited features."
+  verify_dependencies
+fi
+
+log_success "All required dependencies are available"
+
+# ============================================================================
+# Functions
+# ============================================================================
 
 # ============================================================================
 # Main Setup

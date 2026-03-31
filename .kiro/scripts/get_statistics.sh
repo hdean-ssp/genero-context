@@ -81,13 +81,13 @@ fi
 # Count log entries (agent activity)
 AGENT_ACTIVITY=0
 if [[ -f "${GENERO_AKR_LOGS}/akr.log" ]]; then
-    AGENT_ACTIVITY=$(grep -c "COMMIT:" "${GENERO_AKR_LOGS}/akr.log" 2>/dev/null || echo 0)
+    AGENT_ACTIVITY=$(/bin/grep -c "COMMIT:" "${GENERO_AKR_LOGS}/akr.log" 2>/dev/null | tr -d '\n' || echo 0)
 fi
 
 # Get unique agents
 UNIQUE_AGENTS=0
 if [[ -f "${GENERO_AKR_LOGS}/akr.log" ]]; then
-    UNIQUE_AGENTS=$(grep "COMMIT:" "${GENERO_AKR_LOGS}/akr.log" 2>/dev/null | grep -o "agent=[^,]*" | sort -u | wc -l || echo 0)
+    UNIQUE_AGENTS=$(/bin/grep "COMMIT:" "${GENERO_AKR_LOGS}/akr.log" 2>/dev/null | /bin/grep -o "agent=[^,]*" | sort -u | wc -l | tr -d '\n' || echo 0)
 fi
 
 # Output statistics
@@ -134,6 +134,8 @@ EOF
         ;;
     
     json)
+        # Escape special characters in LAST_UPDATED for JSON
+        escaped_last_updated=$(echo "$LAST_UPDATED" | /bin/sed 's/"/\\"/g')
         cat << EOF
 {
   "generated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
@@ -148,7 +150,7 @@ EOF
   "activity": {
     "total_commits": $AGENT_ACTIVITY,
     "unique_agents": $UNIQUE_AGENTS,
-    "last_updated": "$LAST_UPDATED"
+    "last_updated": "$escaped_last_updated"
   }
 }
 EOF
