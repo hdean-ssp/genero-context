@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "name": "Codebase Boundary Check",
-  "description": "Before shell commands, ensures agents do not destructively modify system files or paths outside the user's codebase. AKR, genero-tools, and read-only system access are always permitted.",
+  "description": "Intercepts destructive shell operations outside the user's codebase. Safe reads, AKR scripts, and genero-tools are always permitted and do not trigger this check.",
   "version": "1",
   "when": {
     "type": "preToolUse",
@@ -9,6 +9,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Before executing this shell command, verify it does not violate the boundary constraint.\n\nThe constraint exists to prevent accidental destruction or modification of important system files. It does NOT restrict read access or use of approved tools.\n\n**ALWAYS PERMITTED (no permission needed):**\n- Any operation within the user's codebase (relative paths, `./`, `src/`, etc.)\n- AKR scripts: `bash ~/.kiro/scripts/*.sh` — reading and writing the AKR is always allowed\n- genero-tools queries: `bash $GENERO_TOOLS_PATH/query.sh ...` or `bash $BRODIR/etc/genero-tools/query.sh ...`\n- Reading genero-tools documentation: `cat`, `ls`, `find` on `$BRODIR/etc/genero-tools/` or `.kiro/genero-tools-docs/`\n- Read-only inspection of environment: `echo $BRODIR`, `ls -la $BRODIR/etc/genero-tools`, `which ...`\n- Writing temp files: `cat > /tmp/findings.json`, `echo ... > /tmp/...`\n\n**REQUIRES explicit human permission:**\n- Writing or deleting files in system directories: `/etc/`, `/opt/`, `/usr/`, `/var/` (except via AKR scripts)\n- Modifying files in other users' home directories\n- Version control writes that affect the user's codebase: `svn commit`, `git commit`, `git push` on the user's source repo\n- Installing packages or changing system configuration: `sudo`, `yum install`, `apt install`\n- Deleting or overwriting files outside the codebase and AKR\n\nIf this command falls into the 'requires permission' category, STOP and ask the user before proceeding."
+    "prompt": "Check whether this shell command is a destructive operation outside the user's codebase.\n\nIf the command is any of the following, it is ALWAYS PERMITTED — proceed immediately without asking:\n- grep, find, cat, ls, sed, awk, wc, head, tail (read-only)\n- bash ~/.kiro/scripts/*.sh (AKR scripts)\n- bash $BRODIR/etc/genero-tools/query.sh ... (genero-tools)\n- echo, date, which, env (inspection)\n- cat > /tmp/... or echo > /tmp/... (temp files)\n\nOnly STOP and ask the user if the command does one of these:\n- Writes or deletes files in /etc/, /opt/, /usr/, /var/, or another user's home directory\n- Runs svn commit, git commit, or git push on the user's source repository\n- Uses sudo to install packages or change system configuration\n\nIf the command is clearly in the permitted list, proceed without interruption."
   }
 }

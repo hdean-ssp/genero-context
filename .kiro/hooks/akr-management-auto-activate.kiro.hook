@@ -1,16 +1,14 @@
 {
   "enabled": true,
-  "name": "Auto-Activate AKR Management Specialist",
-  "description": "Automatically activates the AKR Management Specialist skill whenever an agent commits to or changes the AKR, ensuring deduplication, structure integrity, and sentiment analysis are always applied",
+  "name": "AKR Pre-Commit Quality Check",
+  "description": "Before any shell command that calls commit_knowledge.sh or merge_knowledge.sh, reminds the agent to check for duplicates and validate structure.",
   "version": "1",
   "when": {
     "type": "preToolUse",
-    "toolTypes": [
-      ".*commit_knowledge.*|.*merge_knowledge.*|.*update_metadata.*"
-    ]
+    "toolTypes": ["shell"]
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Before proceeding with this AKR operation, activate the \"AKR Management Specialist\" skill and verify:\n\n1. **No duplicates**: Search for existing knowledge before creating new entries\n2. **Valid structure**: All required sections present and correctly formatted\n3. **Objective findings**: No emotional language or unsubstantiated claims\n4. **Correct script path**: Use `bash ~/.kiro/scripts/commit_knowledge.sh` (not bare script name)\n5. **Scope check**: This operation targets the AKR path only — not the user's codebase\n\nUse the skill's deduplication workflow, structure validation, and sentiment analysis to guide this operation."
+    "prompt": "If this shell command calls commit_knowledge.sh or merge_knowledge.sh, verify before proceeding:\n\n1. Search for existing knowledge to avoid duplicates: `bash ~/.kiro/scripts/search_knowledge.sh --query \"[artifact_name]\"`\n2. Ensure findings are objective — no emotional language, claims backed by evidence\n3. Use --action append if knowledge already exists, not --action create\n\nIf this command does NOT call commit_knowledge.sh or merge_knowledge.sh, proceed immediately without any checks."
   }
 }

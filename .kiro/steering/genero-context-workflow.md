@@ -401,7 +401,74 @@ bash query.sh find-function-dependents "changed_function"
 
 ---
 
-## Task Type Decision Tree
+## AKR Quick Reference
+
+### Retrieve (read output directly — no parsing needed)
+```bash
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type module --name "ws_webservices"
+bash ~/.kiro/scripts/search_knowledge.sh --category issues --query "error"
+```
+
+### Commit findings
+```bash
+cat > /tmp/findings.json << 'EOF'
+{
+  "summary": "One sentence description",
+  "key_findings": ["Finding 1", "Finding 2"],
+  "metrics": {"complexity": 8, "lines_of_code": 55, "parameter_count": 1, "dependent_count": 12},
+  "known_issues": ["Issue description"],
+  "recommendations": ["Specific actionable recommendation"]
+}
+EOF
+bash ~/.kiro/scripts/commit_knowledge.sh --type function --name "process_order" --findings /tmp/findings.json --action create
+# Use --action append if entry already exists
+```
+
+### genero-tools queries
+```bash
+bash $BRODIR/etc/genero-tools/query.sh find-function "process_order"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependents "process_order"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependencies "process_order"
+bash $BRODIR/etc/genero-tools/query.sh find-function-resolved "process_order"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "process_*"
+```
+
+See `genero-context-queries.md` for the full query reference.
+
+---
+
+## Bootstrapping a Fresh Codebase
+
+When the AKR is empty (first agent on a new codebase), do an initial sweep before starting any task. This gives the AKR a baseline so subsequent agents benefit immediately.
+
+```bash
+# 1. List all modules/files you'll be working with
+find . -name "*.4gl" | head -20
+
+# 2. For each key module, run a baseline analysis
+bash $BRODIR/etc/genero-tools/query.sh list-file-functions "src/key_module.4gl"
+
+# 3. Commit module-level knowledge
+cat > /tmp/module_findings.json << 'EOF'
+{
+  "summary": "Initial baseline for module X",
+  "key_findings": ["Contains N functions", "Primary purpose: ..."],
+  "metrics": {"complexity": 0, "lines_of_code": 0, "parameter_count": 0, "dependent_count": 0},
+  "known_issues": [],
+  "recommendations": ["Baseline only — further analysis needed"]
+}
+EOF
+bash ~/.kiro/scripts/commit_knowledge.sh --type module --name "module_name" --findings /tmp/module_findings.json --action create
+
+# 4. Check for any known tool gaps (unresolved types)
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types --limit 10
+# If unresolved types exist, investigate and log as AKR issues
+```
+
+This takes 10-15 minutes and means every subsequent agent starts with context rather than from scratch.
+
+---
 
 **Use this to determine which workflow to follow:**
 
@@ -435,55 +502,6 @@ Task: "Implement new feature"
 → Planner Hat: Understand requirements, find similar functions
 → Builder Hat: Implement following patterns, test integration
 → Reviewer Hat: Validate functionality, check integration
-```
-
----
-
-## Query Selection Guide
-
-**Use this to know which genero-tools query to run for each need:**
-
-### Understanding a Function
-```
-Need: Get function details
-→ Query: bash query.sh find-function "function_name"
-→ Returns: Signature, parameters, complexity, LOC, file path
-```
-
-### Understanding Function Impact
-```
-Need: See what a function calls
-→ Query: bash query.sh find-function-dependencies "function_name"
-→ Returns: List of functions it calls
-
-Need: See what calls a function
-→ Query: bash query.sh find-function-dependents "function_name"
-→ Returns: List of functions that call it
-```
-
-### Finding Similar Code
-```
-Need: Find similar functions to follow patterns
-→ Query: bash query.sh search-functions "pattern_*"
-→ Returns: All functions matching pattern
-```
-
-### Finding Code References
-```
-Need: Find where a bug/issue is referenced
-→ Query: bash query.sh find-reference "PRB-299"
-→ Returns: Files containing the reference
-```
-
-### Understanding Code Quality
-```
-Need: Check function complexity
-→ Query: bash query.sh find-function "function_name"
-→ Look at: complexity, lines_of_code, parameter_count
-
-Need: Find overly complex functions
-→ Query: bash query.sh search-functions "*"
-→ Filter: complexity > 10
 ```
 
 ---
@@ -617,36 +635,6 @@ If changes needed:
 ```
 
 **If any item is missing, STOP and complete it.**
-
----
-
-## Logging Format
-
-**All agents must use this logging format:**
-
-```
-[TIMESTAMP] [PHASE] [HAT] [ACTION] [RESULT]
-```
-
-**Examples:**
-```
-[2026-03-29T10:15:30Z] [INCEPTION] [PLANNER] Query: find-function "process_order" → Success
-[2026-03-29T10:15:45Z] [INCEPTION] [PLANNER] Query: find-function-dependents "process_order" → 12 results
-[2026-03-29T10:16:00Z] [INCEPTION] [PLANNER] Fallback: grep for "FUNCTION process_order" → Success
-[2026-03-29T10:16:15Z] [INCEPTION] [PLANNER] Risk identified: 12 dependents need testing
-[2026-03-29T10:16:30Z] [INCEPTION] [PLANNER] Plan documented and presented
-[2026-03-29T10:20:00Z] [INCEPTION] [PLANNER] Human approval received
-[2026-03-29T10:20:15Z] [CONSTRUCTION] [BUILDER] Starting implementation
-[2026-03-29T10:25:00Z] [CONSTRUCTION] [BUILDER] Implementation complete
-[2026-03-29T10:25:15Z] [CONSTRUCTION] [BUILDER] Unit tests: PASS
-[2026-03-29T10:25:30Z] [CONSTRUCTION] [BUILDER] Integration tests: PASS
-[2026-03-29T10:25:45Z] [CONSTRUCTION] [BUILDER] Work presented for review
-[2026-03-29T10:30:00Z] [CONSTRUCTION] [BUILDER] Human review received
-[2026-03-29T10:30:15Z] [OPERATION] [REVIEWER] Starting validation
-[2026-03-29T10:30:30Z] [OPERATION] [REVIEWER] Query: find-function-dependents "process_order" → All verified
-[2026-03-29T10:30:45Z] [OPERATION] [REVIEWER] Validation complete: PASS
-[2026-03-29T10:31:00Z] [OPERATION] [REVIEWER] Task approved
-```
 
 ---
 

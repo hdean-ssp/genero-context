@@ -12,42 +12,42 @@ Use these 6 queries for 90% of your work:
 
 ### 1. Find a Function
 ```bash
-bash query.sh find-function "my_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function "my_function"
 ```
 **Use when**: You need to understand a specific function
 **Returns**: Signature, parameters, returns, complexity, LOC, file path, line numbers
 
 ### 2. Find What a Function Calls
 ```bash
-bash query.sh find-function-dependencies "my_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependencies "my_function"
 ```
 **Use when**: You need to understand what a function depends on
 **Returns**: List of functions that `my_function` calls
 
 ### 3. Find What Calls a Function
 ```bash
-bash query.sh find-function-dependents "my_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependents "my_function"
 ```
 **Use when**: You need to understand impact of changes
 **Returns**: List of functions that call `my_function`
 
 ### 4. List All Functions in a File
 ```bash
-bash query.sh list-file-functions "path/to/file.4gl"
+bash $BRODIR/etc/genero-tools/query.sh list-file-functions "path/to/file.4gl"
 ```
 **Use when**: You need to understand file structure
 **Returns**: All functions defined in the file
 
 ### 5. Find Code References
 ```bash
-bash query.sh find-reference "PRB-299"
+bash $BRODIR/etc/genero-tools/query.sh find-reference "PRB-299"
 ```
 **Use when**: You need to find where a bug/issue is referenced
 **Returns**: Files containing the code reference
 
 ### 6. Search Functions by Pattern
 ```bash
-bash query.sh search-functions "get_*"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "get_*"
 ```
 **Use when**: You need to find similar functions to follow patterns
 **Returns**: All functions matching the pattern
@@ -62,7 +62,7 @@ bash query.sh search-functions "get_*"
 Get function metadata, signature, parameters, returns, and quality metrics.
 
 ```bash
-bash query.sh find-function "process_order"
+bash $BRODIR/etc/genero-tools/query.sh find-function "process_order"
 ```
 
 **Output Format:**
@@ -101,7 +101,7 @@ bash query.sh find-function "process_order"
 Search functions by name pattern (supports wildcards).
 
 ```bash
-bash query.sh search-functions "get_*"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "get_*"
 ```
 
 **Output Format:**
@@ -138,7 +138,7 @@ bash query.sh search-functions "get_*"
 List all functions in a specific file.
 
 ```bash
-bash query.sh list-file-functions "src/module.4gl"
+bash $BRODIR/etc/genero-tools/query.sh list-file-functions "src/module.4gl"
 ```
 
 **Output Format:**
@@ -175,7 +175,7 @@ bash query.sh list-file-functions "src/module.4gl"
 Find all instances of a function (when multiple functions have the same name).
 
 ```bash
-bash query.sh find-all-function-instances "process_data"
+bash $BRODIR/etc/genero-tools/query.sh find-all-function-instances "process_data"
 ```
 
 **Output Format:**
@@ -209,7 +209,7 @@ bash query.sh find-all-function-instances "process_data"
 Find specific function instance when multiple functions have the same name.
 
 ```bash
-bash query.sh find-function-by-name-and-path "process_data" "./src/module1.4gl"
+bash $BRODIR/etc/genero-tools/query.sh find-function-by-name-and-path "process_data" "./src/module1.4gl"
 ```
 
 **When to use:**
@@ -229,7 +229,7 @@ bash query.sh find-function-by-name-and-path "process_data" "./src/module1.4gl"
 Find all functions that a function calls (what it depends on).
 
 ```bash
-bash query.sh find-function-dependencies "process_order"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependencies "process_order"
 ```
 
 **Output Format:**
@@ -264,7 +264,7 @@ bash query.sh find-function-dependencies "process_order"
 Find all functions that call a function (what depends on it).
 
 ```bash
-bash query.sh find-function-dependents "validate_order"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependents "validate_order"
 ```
 
 **Output Format:**
@@ -301,7 +301,7 @@ bash query.sh find-function-dependents "validate_order"
 Find files containing a specific code reference (e.g., bug ID, requirement ID).
 
 ```bash
-bash query.sh find-reference "PRB-299"
+bash $BRODIR/etc/genero-tools/query.sh find-reference "PRB-299"
 ```
 
 **Output Format:**
@@ -331,7 +331,7 @@ bash query.sh find-reference "PRB-299"
 Search for code references by pattern.
 
 ```bash
-bash query.sh search-references "100512"
+bash $BRODIR/etc/genero-tools/query.sh search-references "100512"
 ```
 
 **Output Format:**
@@ -360,7 +360,7 @@ bash query.sh search-references "100512"
 Find files modified by a specific author.
 
 ```bash
-bash query.sh find-author "John Smith"
+bash $BRODIR/etc/genero-tools/query.sh find-author "John Smith"
 ```
 
 **Output Format:**
@@ -390,7 +390,7 @@ bash query.sh find-author "John Smith"
 Show what areas an author has expertise in based on modifications.
 
 ```bash
-bash query.sh author-expertise "John Smith"
+bash $BRODIR/etc/genero-tools/query.sh author-expertise "John Smith"
 ```
 
 **Output Format:**
@@ -430,7 +430,7 @@ bash query.sh author-expertise "John Smith"
 Get function with resolved LIKE type information.
 
 ```bash
-bash query.sh find-function-resolved "process_contract"
+bash $BRODIR/etc/genero-tools/query.sh find-function-resolved "process_contract"
 ```
 
 **Output Format:**
@@ -463,18 +463,18 @@ bash query.sh find-function-resolved "process_contract"
 Find all unresolved LIKE references.
 
 ```bash
-bash query.sh unresolved-types
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types
 ```
 
 With filtering:
 ```bash
-bash query.sh unresolved-types --filter missing_table
-bash query.sh unresolved-types --filter missing_column
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types --filter missing_table
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types --filter missing_column
 ```
 
 With pagination:
 ```bash
-bash query.sh unresolved-types --limit 10 --offset 20
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types --limit 10 --offset 20
 ```
 
 **When to use:**
@@ -493,7 +493,7 @@ bash query.sh unresolved-types --limit 10 --offset 20
 Validate type resolution data consistency.
 
 ```bash
-bash query.sh validate-types
+bash $BRODIR/etc/genero-tools/query.sh validate-types
 ```
 
 **When to use:**
@@ -543,10 +543,10 @@ Do NOT attempt to query or analyze:
 **Always query source files:**
 ```bash
 # Correct: Query source file
-bash query.sh find-function "my_function"  # from .4gl
+bash $BRODIR/etc/genero-tools/query.sh find-function "my_function"  # from .4gl
 
 # Wrong: Don't query compiled files
-bash query.sh find-function "my_function"  # from .42f (won't work)
+bash $BRODIR/etc/genero-tools/query.sh find-function "my_function"  # from .42f (won't work)
 ```
 
 If you need to work with code that's in compiled form, find the corresponding `.4gl` source file first.
@@ -571,55 +571,55 @@ If you need to work with code that's in compiled form, find the corresponding `.
 ### Tip 1: Use Wildcards for Pattern Matching
 ```bash
 # Find all get_* functions
-bash query.sh search-functions "get_*"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "get_*"
 
 # Find all process_* functions
-bash query.sh search-functions "process_*"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "process_*"
 
 # Find all validate_* functions
-bash query.sh search-functions "validate_*"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "validate_*"
 ```
 
 ### Tip 2: Combine Queries for Full Context
 ```bash
 # Get function details
-bash query.sh find-function "my_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function "my_function"
 
 # Get what it calls
-bash query.sh find-function-dependencies "my_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependencies "my_function"
 
 # Get what calls it
-bash query.sh find-function-dependents "my_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependents "my_function"
 
 # Get similar functions
-bash query.sh search-functions "my_*"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "my_*"
 ```
 
 ### Tip 3: Use Pagination for Large Result Sets
 ```bash
 # Get first 10 results
-bash query.sh unresolved-types --limit 10
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types --limit 10
 
 # Get next 10 results
-bash query.sh unresolved-types --limit 10 --offset 10
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types --limit 10 --offset 10
 ```
 
 ### Tip 4: Filter Results for Specific Issues
 ```bash
 # Find missing tables
-bash query.sh unresolved-types --filter missing_table
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types --filter missing_table
 
 # Find missing columns
-bash query.sh unresolved-types --filter missing_column
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types --filter missing_column
 ```
 
 ### Tip 5: Verify Function Instances
 ```bash
 # Find all instances of a function
-bash query.sh find-all-function-instances "process_data"
+bash $BRODIR/etc/genero-tools/query.sh find-all-function-instances "process_data"
 
 # Get specific instance
-bash query.sh find-function-by-name-and-path "process_data" "./src/module1.4gl"
+bash $BRODIR/etc/genero-tools/query.sh find-function-by-name-and-path "process_data" "./src/module1.4gl"
 ```
 
 ---
@@ -629,58 +629,58 @@ bash query.sh find-function-by-name-and-path "process_data" "./src/module1.4gl"
 ### Pattern 1: Understand a Function Completely
 ```bash
 # 1. Get function details
-bash query.sh find-function "target_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function "target_function"
 
 # 2. See what it calls
-bash query.sh find-function-dependencies "target_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependencies "target_function"
 
 # 3. See what calls it
-bash query.sh find-function-dependents "target_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependents "target_function"
 
 # 4. Find similar functions
-bash query.sh search-functions "target_*"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "target_*"
 ```
 
 ### Pattern 2: Plan a Change
 ```bash
 # 1. Find the function
-bash query.sh find-function "function_to_change"
+bash $BRODIR/etc/genero-tools/query.sh find-function "function_to_change"
 
 # 2. Understand impact
-bash query.sh find-function-dependents "function_to_change"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependents "function_to_change"
 
 # 3. Find similar functions to follow patterns
-bash query.sh search-functions "similar_*"
+bash $BRODIR/etc/genero-tools/query.sh search-functions "similar_*"
 
 # 4. Verify type resolution
-bash query.sh find-function-resolved "function_to_change"
+bash $BRODIR/etc/genero-tools/query.sh find-function-resolved "function_to_change"
 ```
 
 ### Pattern 3: Verify a Fix
 ```bash
 # 1. Find the function
-bash query.sh find-function "fixed_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function "fixed_function"
 
 # 2. Verify all dependents
-bash query.sh find-function-dependents "fixed_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependents "fixed_function"
 
 # 3. Check for type issues
-bash query.sh unresolved-types
+bash $BRODIR/etc/genero-tools/query.sh unresolved-types
 
 # 4. Validate types
-bash query.sh validate-types
+bash $BRODIR/etc/genero-tools/query.sh validate-types
 ```
 
 ### Pattern 4: Find Code References
 ```bash
 # 1. Find reference
-bash query.sh find-reference "PRB-299"
+bash $BRODIR/etc/genero-tools/query.sh find-reference "PRB-299"
 
 # 2. Get function details
-bash query.sh find-function "referenced_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function "referenced_function"
 
 # 3. Understand impact
-bash query.sh find-function-dependents "referenced_function"
+bash $BRODIR/etc/genero-tools/query.sh find-function-dependents "referenced_function"
 ```
 
 ---
