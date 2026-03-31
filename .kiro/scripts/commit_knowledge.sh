@@ -104,29 +104,32 @@ acquire_lock() {
   local elapsed=0
 
   log_debug "Acquiring lock: $lock_file"
-  log_debug "Lock timeout: $timeout, retry interval: $retry_interval"
+
+  # Clean up stale lock if it's older than 2x the timeout
+  if [ -d "$lock_file" ]; then
+    local lock_age=$(( $(date +%s) - $(stat -c %Y "$lock_file" 2>/dev/null || echo 0) ))
+    if [ "$lock_age" -gt $((timeout * 2)) ]; then
+      log_info "Removing stale lock (age: ${lock_age}s): $lock_file"
+      rmdir "$lock_file" 2>/dev/null || true
+    fi
+  fi
 
   # Try to acquire lock immediately
-  log_debug "Attempting immediate lock acquisition..."
   if mkdir "$lock_file" 2>/dev/null; then
-    log_debug "Lock acquired immediately"
+    log_debug "Lock acquired"
     return 0
   fi
-  
-  log_debug "Immediate lock acquisition failed, checking for sleep command..."
-  # If immediate acquisition fails, try with retries (if sleep is available)
+
+  # Retry with delays
   if command -v sleep &> /dev/null; then
-    log_debug "sleep command is available, retrying with delays..."
     while [ $elapsed -lt $timeout ]; do
       sleep "$retry_interval"
+      elapsed=$((elapsed + retry_interval))
       if mkdir "$lock_file" 2>/dev/null; then
-        log_debug "Lock acquired after retry"
+        log_debug "Lock acquired after ${elapsed}s"
         return 0
       fi
-      elapsed=$((elapsed + retry_interval))
     done
-  else
-    log_debug "sleep command not available, cannot retry"
   fi
 
   log_error "Failed to acquire lock after ${timeout}s: $lock_file"
@@ -338,25 +341,26 @@ LOCK_FILE="${GENERO_AKR_LOCKS}/${TYPE}_${NAME}.lock"
 log_debug "Knowledge file: $KNOWLEDGE_FILE"
 log_debug "Lock file: $LOCK_FILE"
 
-# Acquire lock
-if ! acquire_lock "$LOCK_FILE" "$GENERO_AKR_LOCK_TIMEOUT" "$GENERO_AKR_LOCK_RETRY_INTERVAL"; then
-  log_error "Could not acquire lock for $TYPE/$NAME"
-  log_info "Continuing without lock (may cause conflicts in concurrent scenarios)"
-  # Don't exit - continue anyway
-fi
-
-# Ensure lock is released on exit (if it was acquired)
+# Ensure lock is always released on exit
 trap "release_lock '$LOCK_FILE' 2>/dev/null || true" EXIT
+
+# Acquire lock (continue without it if unavailable — concurrent writes may conflict)
+LOCK_HELD=0
+if acquire_lock "$LOCK_FILE" "$GENERO_AKR_LOCK_TIMEOUT" "$GENERO_AKR_LOCK_RETRY_INTERVAL"; then
+  LOCK_HELD=1
+else
+  log_info "Continuing without lock (may cause conflicts in concurrent scenarios)"
+fi
 
 # Perform action
 case "$ACTION" in
   create)
     if [ -f "$KNOWLEDGE_FILE" ]; then
-      log_error "Knowledge already exists: $TYPE/$NAME"
-      log_info "Use --action append to add to existing knowledge"
-      exit 1
+      log_info "Knowledge already exists: $TYPE/$NAME — appending instead of creating"
+      append_to_knowledge "$KNOWLEDGE_FILE" "$FINDINGS_FILE"
+    else
+      create_knowledge_document "$KNOWLEDGE_FILE" "$TYPE" "$NAME" "$PATH" "$FINDINGS_FILE"
     fi
-    create_knowledge_document "$KNOWLEDGE_FILE" "$TYPE" "$NAME" "$PATH" "$FINDINGS_FILE"
     ;;
   append)
     if [ ! -f "$KNOWLEDGE_FILE" ]; then
