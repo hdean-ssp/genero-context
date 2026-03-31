@@ -188,55 +188,74 @@ bash query.sh find-function-dependencies "similar_function"
 
 ### Rule 5a: Working Directory Constraint
 
-**CRITICAL: Agents are constrained to the user's codebase directory.**
+**Purpose**: Prevent agents from accidentally destroying or modifying important system files. This constraint is NOT about restricting read access or blocking approved tools.
 
-**Default boundary**: The current working directory (where the user's Genero/4GL source code lives) is the only permitted scope for file reads, writes, searches, and shell commands.
+**The rule in plain terms**: You may freely read anything you need and use all approved tools. You may NOT write to, delete from, or modify system paths outside the user's codebase — unless it is the AKR or an explicitly approved operation.
 
-**What this means in practice:**
-- All file operations must use relative paths within the codebase
-- Shell commands (`grep`, `find`, `sed`, etc.) must be scoped to the codebase directory
-- Do NOT read, write, or execute anything outside the codebase without explicit permission
-- Do NOT access system directories (`/etc`, `/var`, `/opt`, `/home/other_user`, etc.)
-- Do NOT access other users' home directories or shared system paths
-- The AKR path (`$GENERO_AKR_BASE_PATH`) is the **only** permitted exception — it is pre-approved for AKR script operations
-
-**Permitted without asking:**
+**Always permitted — no permission needed:**
 ```bash
-# Within codebase — always OK
+# Codebase operations
 grep -r "FUNCTION process_order" src/
 find . -name "*.4gl"
-bash ~/.kiro/scripts/retrieve_knowledge.sh ...   # AKR scripts — always OK
-bash ~/.kiro/scripts/commit_knowledge.sh ...     # AKR scripts — always OK
+
+# AKR — always permitted (read and write)
+bash ~/.kiro/scripts/retrieve_knowledge.sh ...
+bash ~/.kiro/scripts/commit_knowledge.sh ...
+bash ~/.kiro/scripts/search_knowledge.sh ...
+
+# genero-tools — always permitted (read and execute)
+bash $BRODIR/etc/genero-tools/query.sh find-function "my_function"
+bash $GENERO_TOOLS_PATH/query.sh find-function-dependents "my_function"
+cat $BRODIR/etc/genero-tools/README.md
+ls -la $BRODIR/etc/genero-tools/
+
+# genero-tools docs in this repo — always permitted
+cat .kiro/genero-tools-docs/GENERO_TOOLS_REFERENCE.md
+
+# Read-only environment inspection
+echo $BRODIR
+ls -la $BRODIR/etc/genero-tools
+
+# Temp files for findings/intermediate work
+cat > /tmp/findings.json << 'EOF'
+{ ... }
+EOF
 ```
 
 **Requires explicit human permission before executing:**
 ```bash
-# Outside codebase — STOP and ask first
-grep -r "pattern" /opt/genero/          # system directory
-find /home/other_user -name "*.4gl"     # another user's files
-svn commit                              # commits to version control
-rm -rf /some/path                       # destructive outside codebase
+# Writing or deleting in system directories
+rm /opt/genero/something
+chmod 777 /etc/something
+sudo yum install package
+
+# Modifying another user's files
+rm /home/other_user/file
+
+# Version control writes on the user's source repo
+svn commit
+git commit -m "..."
+git push
 ```
 
 **How to request permission:**
-When a task requires operating outside the codebase, STOP and present:
 ```
 PERMISSION REQUIRED
 
-Action: [describe what you need to do]
-Path/Scope: [exact path or system affected]
-Reason: [why this is necessary]
+Action: [what you need to do]
+Path/Scope: [exact path affected]
+Reason: [why it's necessary]
 Risk: [what could go wrong]
 
-Do you approve? (yes/no)
+Approve? (yes/no)
 ```
 
 Do NOT proceed until the human explicitly approves.
 
-**Mistake to avoid:**
-❌ Running `svn commit`, `git push`, or any version control write operation without explicit approval
-❌ Accessing genero-tools database paths directly (use the provided scripts)
-❌ Writing to system directories or shared paths outside the AKR
+**Key distinction:**
+- Reading genero-tools, AKR, or any system path → always OK
+- Writing/deleting within the AKR via provided scripts → always OK
+- Writing/deleting system paths outside the AKR → requires permission
 
 ### Rule 5b: Avoid Compiled Files
 

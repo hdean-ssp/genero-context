@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "name": "Codebase Boundary Check",
-  "description": "Before any shell command, reminds agents to stay within the user's codebase directory and require explicit permission for operations outside it",
+  "description": "Before shell commands, ensures agents do not destructively modify system files or paths outside the user's codebase. AKR, genero-tools, and read-only system access are always permitted.",
   "version": "1",
   "when": {
     "type": "preToolUse",
@@ -9,6 +9,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Before executing this shell command, verify it complies with the working directory constraint:\n\n**PERMITTED without asking:**\n- Commands scoped to the current codebase directory (relative paths, `./`, `src/`, etc.)\n- AKR script calls: `bash ~/.kiro/scripts/*.sh`\n- genero-tools queries: `bash $GENERO_TOOLS_PATH/query.sh ...`\n- Read-only system queries: `echo $BRODIR`, `ls -la $BRODIR/etc/genero-tools`\n\n**REQUIRES explicit human permission:**\n- Any path outside the codebase (`/opt/`, `/etc/`, `/home/other/`, absolute paths not in AKR/genero-tools)\n- Version control writes: `svn commit`, `git push`, `git commit`\n- Destructive operations outside codebase: `rm`, `chmod`, `chown` on system paths\n- Package installation or system configuration changes\n\nIf this command operates outside the permitted scope, STOP and request permission using the format in genero-context-workflow.md before proceeding."
+    "prompt": "Before executing this shell command, verify it does not violate the boundary constraint.\n\nThe constraint exists to prevent accidental destruction or modification of important system files. It does NOT restrict read access or use of approved tools.\n\n**ALWAYS PERMITTED (no permission needed):**\n- Any operation within the user's codebase (relative paths, `./`, `src/`, etc.)\n- AKR scripts: `bash ~/.kiro/scripts/*.sh` — reading and writing the AKR is always allowed\n- genero-tools queries: `bash $GENERO_TOOLS_PATH/query.sh ...` or `bash $BRODIR/etc/genero-tools/query.sh ...`\n- Reading genero-tools documentation: `cat`, `ls`, `find` on `$BRODIR/etc/genero-tools/` or `.kiro/genero-tools-docs/`\n- Read-only inspection of environment: `echo $BRODIR`, `ls -la $BRODIR/etc/genero-tools`, `which ...`\n- Writing temp files: `cat > /tmp/findings.json`, `echo ... > /tmp/...`\n\n**REQUIRES explicit human permission:**\n- Writing or deleting files in system directories: `/etc/`, `/opt/`, `/usr/`, `/var/` (except via AKR scripts)\n- Modifying files in other users' home directories\n- Version control writes that affect the user's codebase: `svn commit`, `git commit`, `git push` on the user's source repo\n- Installing packages or changing system configuration: `sudo`, `yum install`, `apt install`\n- Deleting or overwriting files outside the codebase and AKR\n\nIf this command falls into the 'requires permission' category, STOP and ask the user before proceeding."
   }
 }

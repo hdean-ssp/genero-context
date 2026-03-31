@@ -103,50 +103,46 @@ bash ~/.kiro/scripts/commit_knowledge.sh --type issue --name "error_genero_tools
 
 ## Working Directory Constraint
 
-**Agents must operate within the user's codebase directory at all times.**
+**Purpose**: Prevent agents from accidentally destroying or modifying important system files. This does NOT restrict read access or use of approved tools.
 
-All file reads, writes, searches, and shell commands must be scoped to the current working directory (the user's Genero/4GL source tree) unless explicit human permission is granted.
-
-**The only pre-approved exception** is the AKR path (`$GENERO_AKR_BASE_PATH`) accessed via the provided scripts at `~/.kiro/scripts/`.
-
-### Permitted Operations (no permission needed)
+**Always permitted — no permission needed:**
 
 ```bash
-# Searching within codebase
-grep -r "FUNCTION process_order" .
+# Codebase operations (relative paths)
 grep -r "FUNCTION process_order" src/
 find . -name "*.4gl"
 
-# AKR script operations (always permitted)
+# AKR — always permitted (read and write via scripts)
 bash ~/.kiro/scripts/retrieve_knowledge.sh ...
 bash ~/.kiro/scripts/commit_knowledge.sh ...
-bash ~/.kiro/scripts/search_knowledge.sh ...
-bash ~/.kiro/scripts/validate_knowledge.sh
 
-# genero-tools queries (always permitted)
-bash $GENERO_TOOLS_PATH/query.sh find-function "my_function"
+# genero-tools — always permitted (read and execute)
+bash $BRODIR/etc/genero-tools/query.sh find-function "my_function"
+cat $BRODIR/etc/genero-tools/README.md
+ls -la $BRODIR/etc/genero-tools/
+
+# genero-tools docs in this repo
+cat .kiro/genero-tools-docs/GENERO_TOOLS_REFERENCE.md
+
+# Temp files for intermediate work
+cat > /tmp/findings.json << 'EOF'
+{ ... }
+EOF
 ```
 
-### Operations Requiring Explicit Permission
+**Requires explicit human permission:**
 
-Stop and ask before:
-- Any `svn commit`, `git push`, or version control write
-- Accessing paths outside the codebase (e.g., `/opt/`, `/etc/`, `/home/other/`)
-- Running system-level commands (`sudo`, `chmod` on system paths, etc.)
-- Deleting files outside the codebase
-- Installing packages or modifying system configuration
+```bash
+# Writing/deleting in system directories
+rm /opt/genero/something
+sudo yum install package
 
-**Permission request format:**
+# Version control writes on the user's source repo
+svn commit
+git commit && git push
 ```
-PERMISSION REQUIRED
 
-Action: [what you need to do]
-Path/Scope: [exact path or system affected]
-Reason: [why this is necessary for the task]
-Risk: [what could go wrong]
-
-Approve? (yes/no)
-```
+See `genero-context-workflow.md` Rule 5a for the full permission request format.
 
 ---
 
