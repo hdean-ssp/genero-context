@@ -42,16 +42,16 @@ This creates the directory structure at `$BRODIR/etc/genero-akr` (configurable).
 All paths are set in `~/.kiro/scripts/akr-config.sh`:
 
 ```bash
-# Change this one line to move the AKR anywhere
-export GENERO_AKR_BASE_PATH="${BRODIR:-/opt/genero}/etc/genero-akr"
+# genero-tools — defaults to $BRODIR/etc/genero-tools
+# Override by setting this before running any script:
+export GENERO_TOOLS_PATH="${BRODIR}/etc/genero-tools"
+
+# AKR — defaults to $BRODIR/etc/genero-akr
+# Override by setting this before running any script:
+export GENERO_AKR_BASE_PATH="${BRODIR}/etc/genero-akr"
 ```
 
-Other useful environment variables:
-
-```bash
-export GENERO_AGENT_ID="agent-1"          # identifies this agent in logs
-export GENERO_AKR_LOG_LEVEL="info"        # debug | info | warning | error
-```
+Both paths derive from `$BRODIR` automatically. If your Genero installation is elsewhere, just set `BRODIR` and everything follows.
 
 ## Verify the installation
 

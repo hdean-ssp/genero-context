@@ -7,31 +7,19 @@
 # ============================================================================
 # CONFIGURATION: genero-tools path
 # ============================================================================
-# Default: Assumes genero-tools is installed at $BRODIR/etc/genero-tools
-# Change this if genero-tools is in a different location
-# Allow override via environment variable (for testing)
+# Default: $BRODIR/etc/genero-tools
+# Override by setting GENERO_TOOLS_PATH in your environment before sourcing
 if [ -z "$GENERO_TOOLS_PATH" ]; then
-  # Check if genero-tools exists in development directory
-  if [ -d "/home/hdean/development/genero-tools" ]; then
-    export GENERO_TOOLS_PATH="/home/hdean/development/genero-tools"
-  else
-    export GENERO_TOOLS_PATH="${BRODIR:-/opt/genero}/etc/genero-tools"
-  fi
+  export GENERO_TOOLS_PATH="${BRODIR:-/opt/genero}/etc/genero-tools"
 fi
 
 # ============================================================================
 # CONFIGURATION: AKR path
 # ============================================================================
 # Default: $BRODIR/etc/genero-akr
-# Change this path to move AKR to a different location
-# Allow override via environment variable (for testing)
+# Override by setting GENERO_AKR_BASE_PATH in your environment before sourcing
 if [ -z "$GENERO_AKR_BASE_PATH" ]; then
-  # Check if genero-akr exists in development directory
-  if [ -d "/home/hdean/development/genero-akr" ]; then
-    export GENERO_AKR_BASE_PATH="/home/hdean/development/genero-akr"
-  else
-    export GENERO_AKR_BASE_PATH="${BRODIR:-/opt/genero}/etc/genero-akr"
-  fi
+  export GENERO_AKR_BASE_PATH="${BRODIR:-/opt/genero}/etc/genero-akr"
 fi
 
 # ============================================================================
@@ -170,17 +158,13 @@ get_dependency_status() {
 # Validation
 # ============================================================================
 if [ ! -d "$GENERO_AKR_BASE_PATH" ]; then
-  echo "ERROR: AKR base path does not exist: $GENERO_AKR_BASE_PATH"
-  echo "Please run: bash setup_akr.sh"
-  exit 1
+  echo "WARNING: AKR base path does not exist: $GENERO_AKR_BASE_PATH"
+  echo "Run: bash ~/.kiro/scripts/setup_akr.sh"
 fi
 
-# Warn if genero-tools is not found (but don't fail - framework can work without it)
+# Warn if genero-tools is not found (framework can work without it via grep fallback)
 if [ ! -d "$GENERO_TOOLS_PATH" ]; then
   echo "WARNING: genero-tools not found at: $GENERO_TOOLS_PATH"
-  echo "Some features may be limited. To install genero-tools:"
-  echo "  1. Download from your Genero distribution"
-  echo "  2. Extract to: $GENERO_TOOLS_PATH"
-  echo "  3. Or set GENERO_TOOLS_PATH to the correct location"
+  echo "Set BRODIR correctly or set GENERO_TOOLS_PATH to override."
 fi
 
