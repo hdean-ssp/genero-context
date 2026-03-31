@@ -220,7 +220,7 @@ main() {
     for file in "${required_files[@]}"; do
         if [[ ! -f "$SCRIPT_DIR/$file" ]]; then
             print_error "Missing: $file"
-            ((missing_files++))
+            missing_files=$((missing_files + 1))
         fi
     done
     
@@ -262,7 +262,7 @@ main() {
         if [[ -f "$KIRO_DIR/$file" ]]; then
             mkdir -p "$BACKUP_DIR/$(dirname "$file")"
             cp "$KIRO_DIR/$file" "$BACKUP_DIR/$file"
-            ((backed_up++))
+            backed_up=$((backed_up + 1))
         fi
     done
     
@@ -327,7 +327,7 @@ main() {
     for file in "${required_files[@]}"; do
         local target_file="${file#.kiro/}"
         if [[ -f "$KIRO_DIR/$target_file" ]]; then
-            ((installed_files++))
+            installed_files=$((installed_files + 1))
         else
             print_warning "Not found: $target_file"
         fi
