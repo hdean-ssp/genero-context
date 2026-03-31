@@ -47,16 +47,16 @@ The AKR is a shared memory system where agents accumulate knowledge about Genero
 
 ```bash
 # Search for exact matches
-bash search_knowledge.sh --query "exact_artifact_name"
+bash ~/.kiro/scripts/search_knowledge.sh --query "exact_artifact_name"
 
 # Search for partial matches
-bash search_knowledge.sh --query "partial_name"
+bash ~/.kiro/scripts/search_knowledge.sh --query "partial_name"
 
 # Search by type
-bash search_knowledge.sh --type function --query "process_*"
+bash ~/.kiro/scripts/search_knowledge.sh --type function --query "process_*"
 
 # Search by category
-bash search_knowledge.sh --category functions --query "order"
+bash ~/.kiro/scripts/search_knowledge.sh --category functions --query "order"
 ```
 
 **What to look for:**
@@ -70,7 +70,7 @@ bash search_knowledge.sh --category functions --query "order"
 **If potential duplicate found, retrieve and analyze:**
 
 ```bash
-bash retrieve_knowledge.sh --type function --name "process_order"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 ```
 
 **Compare:**
@@ -109,13 +109,13 @@ bash retrieve_knowledge.sh --type function --name "process_order"
 
 ```bash
 # Compare the two documents
-bash compare_knowledge.sh --type function --name "process_order" --findings findings.json
+bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "process_order" --findings findings.json
 
 # Merge findings
-bash merge_knowledge.sh --type function --name "process_order" --findings findings.json
+bash ~/.kiro/scripts/merge_knowledge.sh --type function --name "process_order" --findings findings.json
 
 # Verify merge
-bash retrieve_knowledge.sh --type function --name "process_order"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 ```
 
 **Merge Strategy:**
@@ -408,7 +408,7 @@ Examples:
 
 ```bash
 # Validate all knowledge
-bash validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 
 # Output shows:
 # [INFO] Validating AKR at: /opt/genero/etc/genero-akr
@@ -455,7 +455,7 @@ cat > findings.json << 'EOF'
 EOF
 
 # Commit with structure validation
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
@@ -475,7 +475,7 @@ Before committing any knowledge:
 - [ ] Analysis history in reverse chronological order
 - [ ] All links/references are valid
 - [ ] No typos or formatting errors
-- [ ] Validation passes: `bash validate_knowledge.sh`
+- [ ] Validation passes: `bash ~/.kiro/scripts/validate_knowledge.sh`
 
 ---
 
@@ -667,7 +667,7 @@ Before committing any knowledge, review for bias:
 
 ```bash
 # Retrieve knowledge
-bash retrieve_knowledge.sh --type function --name "process_order"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 
 # Review each finding:
 # - Is it objective?
@@ -700,10 +700,10 @@ bash retrieve_knowledge.sh --type function --name "process_order"
 
 ```bash
 # Validate structure
-bash validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 
 # Commit with updated findings
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
@@ -740,13 +740,13 @@ Before committing any knowledge:
 
 ```bash
 # Retrieve knowledge
-bash retrieve_knowledge.sh --type function --name "target_function"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "target_function"
 
 # Check for duplicates
-bash search_knowledge.sh --query "target_function"
+bash ~/.kiro/scripts/search_knowledge.sh --query "target_function"
 
 # Validate structure
-bash validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 ```
 
 ### In Builder Hat (Construction Phase)
@@ -760,7 +760,7 @@ bash validate_knowledge.sh
 
 ```bash
 # Compare with existing
-bash compare_knowledge.sh --type function --name "target_function" --findings findings.json
+bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "target_function" --findings findings.json
 
 # Verify findings are objective (no bias)
 # Verify structure is valid
@@ -778,13 +778,13 @@ bash compare_knowledge.sh --type function --name "target_function" --findings fi
 
 ```bash
 # Validate structure
-bash validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 
 # Check for duplicates
-bash search_knowledge.sh --query "artifact_name"
+bash ~/.kiro/scripts/search_knowledge.sh --query "artifact_name"
 
 # Commit
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "target_function" \
   --findings findings.json \
@@ -827,13 +827,13 @@ bash commit_knowledge.sh \
 
 ```bash
 # Score all knowledge
-bash quality_score.sh
+bash ~/.kiro/scripts/quality_score.sh
 
 # Score specific type
-bash quality_score.sh --type function
+bash ~/.kiro/scripts/quality_score.sh --type function
 
 # Show only low-quality documents
-bash quality_score.sh --threshold 70
+bash ~/.kiro/scripts/quality_score.sh --threshold 70
 ```
 
 ---
@@ -929,34 +929,34 @@ bash quality_score.sh --threshold 70
 ### Deduplication
 ```bash
 # Search for existing knowledge
-bash search_knowledge.sh --query "artifact_name"
+bash ~/.kiro/scripts/search_knowledge.sh --query "artifact_name"
 
 # Compare with existing
-bash compare_knowledge.sh --type function --name "artifact_name" --findings findings.json
+bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "artifact_name" --findings findings.json
 
 # Merge duplicates
-bash merge_knowledge.sh --type function --name "artifact_name" --findings findings.json
+bash ~/.kiro/scripts/merge_knowledge.sh --type function --name "artifact_name" --findings findings.json
 ```
 
 ### Structure Validation
 ```bash
 # Validate all knowledge
-bash validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 
 # Validate specific type
-bash validate_knowledge.sh --type function
+bash ~/.kiro/scripts/validate_knowledge.sh --type function
 
 # Get quality scores
-bash quality_score.sh
+bash ~/.kiro/scripts/quality_score.sh
 ```
 
 ### Sentiment Analysis
 ```bash
 # Retrieve knowledge for review
-bash retrieve_knowledge.sh --type function --name "artifact_name"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "artifact_name"
 
 # Review for bias and update if needed
-bash commit_knowledge.sh --type function --name "artifact_name" --findings findings.json --action update
+bash ~/.kiro/scripts/commit_knowledge.sh --type function --name "artifact_name" --findings findings.json --action update
 ```
 
 ---

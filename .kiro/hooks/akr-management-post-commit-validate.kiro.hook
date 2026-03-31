@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "name": "Validate AKR Quality After Commit",
-  "description": "After AKR commits, validates quality using the AKR Management Specialist skill framework to ensure the committed knowledge meets quality standards",
+  "description": "After AKR commits, validates quality using the AKR Management Specialist skill framework and checks for errors that should be logged as AKR issues",
   "version": "1",
   "when": {
     "type": "postToolUse",
@@ -11,6 +11,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "AKR commit completed. Now validate the quality using the AKR Management Specialist skill:\n\n1. **Structure Validation**: Run `bash validate_knowledge.sh` to ensure all sections are present and valid\n2. **Quality Scoring**: Run `bash quality_score.sh` to verify quality score > 80\n3. **Deduplication Check**: Run `bash search_knowledge.sh --query \"[artifact_name]\"` to confirm no duplicates were created\n4. **Sentiment Review**: Retrieve the committed knowledge and verify findings are objective (no emotional language)\n\nIf any issues found, use the skill's troubleshooting guide to fix them."
+    "prompt": "AKR commit completed. Now validate quality and check for errors:\n\n1. **Structure Validation**: Run `bash ~/.kiro/scripts/validate_knowledge.sh` to ensure all sections are present and valid\n2. **Quality Scoring**: Run `bash ~/.kiro/scripts/quality_score.sh` to verify quality score > 80\n3. **Deduplication Check**: Run `bash ~/.kiro/scripts/search_knowledge.sh --query \"[artifact_name]\"` to confirm no duplicates were created\n4. **Sentiment Review**: Retrieve the committed knowledge and verify findings are objective (no emotional language)\n5. **Error Logging**: If any errors occurred during this operation, log them as AKR issues using `bash ~/.kiro/scripts/commit_knowledge.sh --type issue --name \"error_[description]\" --findings /tmp/error_findings.json --action create`\n\nIf any issues found, use the AKR Management Specialist skill's troubleshooting guide to fix them."
   }
 }

@@ -186,7 +186,59 @@ bash query.sh find-function "similar_function"
 bash query.sh find-function-dependencies "similar_function"
 ```
 
-### Rule 5a: Avoid Compiled Files
+### Rule 5a: Working Directory Constraint
+
+**CRITICAL: Agents are constrained to the user's codebase directory.**
+
+**Default boundary**: The current working directory (where the user's Genero/4GL source code lives) is the only permitted scope for file reads, writes, searches, and shell commands.
+
+**What this means in practice:**
+- All file operations must use relative paths within the codebase
+- Shell commands (`grep`, `find`, `sed`, etc.) must be scoped to the codebase directory
+- Do NOT read, write, or execute anything outside the codebase without explicit permission
+- Do NOT access system directories (`/etc`, `/var`, `/opt`, `/home/other_user`, etc.)
+- Do NOT access other users' home directories or shared system paths
+- The AKR path (`$GENERO_AKR_BASE_PATH`) is the **only** permitted exception — it is pre-approved for AKR script operations
+
+**Permitted without asking:**
+```bash
+# Within codebase — always OK
+grep -r "FUNCTION process_order" src/
+find . -name "*.4gl"
+bash ~/.kiro/scripts/retrieve_knowledge.sh ...   # AKR scripts — always OK
+bash ~/.kiro/scripts/commit_knowledge.sh ...     # AKR scripts — always OK
+```
+
+**Requires explicit human permission before executing:**
+```bash
+# Outside codebase — STOP and ask first
+grep -r "pattern" /opt/genero/          # system directory
+find /home/other_user -name "*.4gl"     # another user's files
+svn commit                              # commits to version control
+rm -rf /some/path                       # destructive outside codebase
+```
+
+**How to request permission:**
+When a task requires operating outside the codebase, STOP and present:
+```
+PERMISSION REQUIRED
+
+Action: [describe what you need to do]
+Path/Scope: [exact path or system affected]
+Reason: [why this is necessary]
+Risk: [what could go wrong]
+
+Do you approve? (yes/no)
+```
+
+Do NOT proceed until the human explicitly approves.
+
+**Mistake to avoid:**
+❌ Running `svn commit`, `git push`, or any version control write operation without explicit approval
+❌ Accessing genero-tools database paths directly (use the provided scripts)
+❌ Writing to system directories or shared paths outside the AKR
+
+### Rule 5b: Avoid Compiled Files
 
 **CRITICAL: Never analyze or modify compiled files:**
 - `.42f` - Compiled form files
@@ -505,21 +557,24 @@ If changes needed:
 **Wrong**: Try to analyze or modify .42f, .42m, .42r files
 **Right**: Always work with source files (.4gl) only
 
-### ❌ Mistake 9: Not Using AKR (Phase 2)
+### ❌ Mistake 9: Not Using AKR
 **Wrong**: Start analysis from scratch without checking existing knowledge
 **Right**: Always retrieve existing knowledge from AKR first (see genero-akr-workflow.md)
 
 **AKR Commands:**
 ```bash
-# Retrieve existing knowledge
-bash retrieve_knowledge.sh --type function --name "target_function"
-
-# Compare before committing
-bash compare_knowledge.sh --type function --name "target_function" --findings findings.json
-
-# Check adoption metrics
-bash get_statistics.sh
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "target_function"
+bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "target_function" --findings findings.json
+bash ~/.kiro/scripts/get_statistics.sh
 ```
+
+### ❌ Mistake 10: Operating Outside the Codebase Without Permission
+**Wrong**: Run commands against system paths, commit to version control, or access files outside the user's codebase without asking
+**Right**: Stay within the codebase directory. Ask for explicit permission before any operation outside it.
+
+### ❌ Mistake 11: Not Logging Errors to AKR
+**Wrong**: Encounter a recurring error or tool failure and move on silently
+**Right**: Log errors as AKR issues so future agents are aware. See genero-context-operations.md for the error logging workflow.
 
 ---
 
@@ -537,6 +592,8 @@ bash get_statistics.sh
 8. ✓ All standards compliance verified
 9. ✓ No regressions detected
 10. ✓ Task marked complete by human
+11. ✓ All operations stayed within the codebase (or explicit permission obtained)
+12. ✓ Any errors or tool failures logged to AKR as issues
 
 **If any criterion is not met, task is not complete.**
 

@@ -12,17 +12,17 @@
 
 ### Retrieve Knowledge
 ```bash
-bash retrieve_knowledge.sh --type function --name "process_order"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 ```
 
 ### Commit Knowledge
 ```bash
-bash commit_knowledge.sh --type function --name "process_order" --findings findings.json --action append
+bash ~/.kiro/scripts/commit_knowledge.sh --type function --name "process_order" --findings findings.json --action append
 ```
 
 ### Search Knowledge
 ```bash
-bash search_knowledge.sh --query "type resolution"
+bash ~/.kiro/scripts/search_knowledge.sh --query "type resolution"
 ```
 
 ---
@@ -166,9 +166,9 @@ All knowledge documents follow this structure:
 2. **Retrieve Existing Knowledge**
    ```bash
    # Check if knowledge exists
-   bash retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
-   bash retrieve_knowledge.sh --type file --path "$TARGET_FILE"
-   bash retrieve_knowledge.sh --type module --name "$TARGET_MODULE"
+   bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
+   bash ~/.kiro/scripts/retrieve_knowledge.sh --type file --path "$TARGET_FILE"
+   bash ~/.kiro/scripts/retrieve_knowledge.sh --type module --name "$TARGET_MODULE"
    ```
 
 3. **Review Existing Analysis**
@@ -220,13 +220,13 @@ All knowledge documents follow this structure:
 2. **Retrieve Existing Knowledge**
    ```bash
    # Get what we already know
-   bash retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
+   bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
    ```
 
 3. **Compare Findings**
    ```bash
    # Use comparison tool (when available)
-   bash compare_knowledge.sh --type function --name "$TARGET_FUNCTION"
+   bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "$TARGET_FUNCTION"
    ```
 
 4. **Identify New Insights**
@@ -317,7 +317,7 @@ All knowledge documents follow this structure:
 3. **Compare with Existing Knowledge (Phase 2)**
    ```bash
    # Before committing, see what changed since last analysis
-   bash compare_knowledge.sh \
+   bash ~/.kiro/scripts/compare_knowledge.sh \
      --type function \
      --name "$TARGET_FUNCTION" \
      --findings findings.json
@@ -331,7 +331,7 @@ All knowledge documents follow this structure:
 
 4. **Commit Knowledge**
    ```bash
-   bash commit_knowledge.sh \
+   bash ~/.kiro/scripts/commit_knowledge.sh \
      --type function \
      --name "$TARGET_FUNCTION" \
      --findings findings.json \
@@ -346,16 +346,16 @@ All knowledge documents follow this structure:
 5. **Verify Commit**
    ```bash
    # Retrieve to confirm it was saved
-   bash retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
+   bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
    ```
 
 6. **Check Adoption Metrics (Phase 2)**
    ```bash
    # See how much knowledge has been collected
-   bash get_statistics.sh
+   bash ~/.kiro/scripts/get_statistics.sh
    
    # Or get JSON format for parsing
-   bash get_statistics.sh --format json
+   bash ~/.kiro/scripts/get_statistics.sh --format json
    ```
 
 7. **Update Related Knowledge**
@@ -572,9 +572,9 @@ See: process_order, validate_order
 
 **Commands:**
 ```bash
-bash retrieve_knowledge.sh --type function --name "target_function"
-bash retrieve_knowledge.sh --type file --path "target_file.4gl"
-bash retrieve_knowledge.sh --type module --name "target_module"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "target_function"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type file --path "target_file.4gl"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type module --name "target_module"
 ```
 
 **Output:** Refined understanding with historical context
@@ -598,8 +598,8 @@ bash retrieve_knowledge.sh --type module --name "target_module"
 
 **Commands:**
 ```bash
-bash retrieve_knowledge.sh --type function --name "modified_function"
-bash compare_knowledge.sh --type function --name "modified_function"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "modified_function"
+bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "modified_function"
 ```
 
 **Output:** Structured findings ready for commit
@@ -623,7 +623,7 @@ bash compare_knowledge.sh --type function --name "modified_function"
 
 **Commands:**
 ```bash
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "modified_function" \
   --findings findings.json \
@@ -643,7 +643,7 @@ bash commit_knowledge.sh \
 
 **Step 1: Retrieve Knowledge (Planner Hat)**
 ```bash
-bash retrieve_knowledge.sh --type function --name "process_order"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 
 # Output shows:
 # - 15 dependents (high risk)
@@ -665,7 +665,7 @@ bash query.sh find-function-dependents "process_order"
 bash query.sh find-function-resolved "process_order"
 
 # Compare with existing knowledge
-bash compare_knowledge.sh --type function --name "process_order"
+bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "process_order"
 
 # Findings:
 # - Complexity now 11 (increased)
@@ -675,7 +675,7 @@ bash compare_knowledge.sh --type function --name "process_order"
 
 **Step 4: Commit (Reviewer Hat)**
 ```bash
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
@@ -704,7 +704,7 @@ bash commit_knowledge.sh \
 
 **Step 2: Create Pattern Knowledge**
 ```bash
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type pattern \
   --name "error_handling" \
   --findings pattern_findings.json \
@@ -731,7 +731,7 @@ bash commit_knowledge.sh \
 
 **Step 2: Create Issue Knowledge**
 ```bash
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type issue \
   --name "type_resolution_issues" \
   --findings issue_findings.json \
@@ -753,19 +753,19 @@ bash commit_knowledge.sh \
 
 ```bash
 # Find knowledge about a function
-bash retrieve_knowledge.sh --type function --name "process_order"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "process_order"
 
 # Find knowledge about a file
-bash retrieve_knowledge.sh --type file --path "src/orders.4gl"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type file --path "src/orders.4gl"
 
 # Find knowledge about a module
-bash retrieve_knowledge.sh --type module --name "payment"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type module --name "payment"
 
 # Find knowledge about a pattern
-bash retrieve_knowledge.sh --type pattern --name "error_handling"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type pattern --name "error_handling"
 
 # Find knowledge about an issue
-bash retrieve_knowledge.sh --type issue --name "circular_dependencies"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type issue --name "circular_dependencies"
 
 # Get analysis history
 bash get_history.sh --type function --name "process_order"
@@ -775,28 +775,28 @@ bash get_history.sh --type function --name "process_order"
 
 ```bash
 # Create new knowledge
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
   --action create
 
 # Append to existing knowledge
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
   --action append
 
 # Update existing knowledge
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
   --action update
 
 # Mark as deprecated
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
@@ -807,20 +807,20 @@ bash commit_knowledge.sh \
 
 ```bash
 # Search across all knowledge
-bash search_knowledge.sh --query "type resolution"
+bash ~/.kiro/scripts/search_knowledge.sh --query "type resolution"
 
 # Search in specific type
-bash search_knowledge.sh --type function --query "complexity"
+bash ~/.kiro/scripts/search_knowledge.sh --type function --query "complexity"
 
 # Search in specific category
-bash search_knowledge.sh --category issues --query "circular"
+bash ~/.kiro/scripts/search_knowledge.sh --category issues --query "circular"
 ```
 
 ### Manage Knowledge
 
 ```bash
 # Validate knowledge consistency
-bash validate_knowledge.sh
+bash ~/.kiro/scripts/validate_knowledge.sh
 
 # Update artifact status
 bash update_status.sh --type function --name "process_order" --status deprecated
@@ -829,7 +829,7 @@ bash update_status.sh --type function --name "process_order" --status deprecated
 bash archive_knowledge.sh --older-than 90
 
 # Get repository statistics
-bash get_statistics.sh
+bash ~/.kiro/scripts/get_statistics.sh
 ```
 
 ---
@@ -840,7 +840,7 @@ bash get_statistics.sh
 
 **Before analyzing an artifact, always check if knowledge exists:**
 ```bash
-bash retrieve_knowledge.sh --type function --name "target_function"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "target_function"
 ```
 
 **Why:** Avoid redundant analysis and build on previous work
@@ -849,7 +849,7 @@ bash retrieve_knowledge.sh --type function --name "target_function"
 
 **Always compare current findings with existing knowledge:**
 ```bash
-bash compare_knowledge.sh --type function --name "target_function"
+bash ~/.kiro/scripts/compare_knowledge.sh --type function --name "target_function"
 ```
 
 **Why:** Identify what's new and what's changed
@@ -858,7 +858,7 @@ bash compare_knowledge.sh --type function --name "target_function"
 
 **Use `--action append` to preserve analysis history:**
 ```bash
-bash commit_knowledge.sh --action append
+bash ~/.kiro/scripts/commit_knowledge.sh --action append
 ```
 
 **Why:** Keep historical context and track how artifact evolved
@@ -952,7 +952,7 @@ ARCHIVED (no longer relevant)
 1. Check artifact name spelling
 2. Check artifact type (function vs file vs module)
 3. Check if knowledge has been created yet
-4. Search for similar artifacts: `bash search_knowledge.sh --query "partial_name"`
+4. Search for similar artifacts: `bash ~/.kiro/scripts/search_knowledge.sh --query "partial_name"`
 
 ### Conflicting Knowledge
 
@@ -1086,7 +1086,7 @@ Phase 2 adds four new scripts that automate metadata management and handle concu
 
 **Usage:**
 ```bash
-bash compare_knowledge.sh \
+bash ~/.kiro/scripts/compare_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json
@@ -1106,7 +1106,7 @@ bash query.sh find-function "process_order"
 # ... save findings to findings.json
 
 # Step 2: Compare with existing knowledge
-bash compare_knowledge.sh \
+bash ~/.kiro/scripts/compare_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json
@@ -1123,7 +1123,7 @@ bash compare_knowledge.sh \
 # If just new findings → use --action append
 # If first time → use --action create
 
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json \
@@ -1154,7 +1154,7 @@ bash commit_knowledge.sh \
 
 **Manual usage (if needed):**
 ```bash
-bash merge_knowledge.sh \
+bash ~/.kiro/scripts/merge_knowledge.sh \
   --type function \
   --name "process_order" \
   --findings findings.json
@@ -1166,11 +1166,11 @@ bash merge_knowledge.sh \
 Agent 1 and Agent 2 both analyze process_order simultaneously:
 
 Agent 1: Commits first (succeeds)
-bash commit_knowledge.sh --type function --name "process_order" \
+bash ~/.kiro/scripts/commit_knowledge.sh --type function --name "process_order" \
   --findings agent1_findings.json --action create
 
 Agent 2: Tries to commit (conflict detected)
-bash commit_knowledge.sh --type function --name "process_order" \
+bash ~/.kiro/scripts/commit_knowledge.sh --type function --name "process_order" \
   --findings agent2_findings.json --action append
 
 System automatically:
@@ -1200,13 +1200,13 @@ Result: Both agents' findings are preserved, no data loss
 **Usage:**
 ```bash
 # Text format (default)
-bash get_statistics.sh
+bash ~/.kiro/scripts/get_statistics.sh
 
 # JSON format (for parsing)
-bash get_statistics.sh --format json
+bash ~/.kiro/scripts/get_statistics.sh --format json
 
 # CSV format (for spreadsheets)
-bash get_statistics.sh --format csv
+bash ~/.kiro/scripts/get_statistics.sh --format csv
 ```
 
 **What it shows:**
@@ -1262,10 +1262,10 @@ bash get_statistics.sh --format csv
 **Step 3a: Retrieve Existing Knowledge**
 ```bash
 # Retrieve what we already know
-bash retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
+bash ~/.kiro/scripts/retrieve_knowledge.sh --type function --name "$TARGET_FUNCTION"
 
 # Check adoption metrics
-bash get_statistics.sh
+bash ~/.kiro/scripts/get_statistics.sh
 ```
 
 ### Builder Hat (Construction Phase)
@@ -1273,7 +1273,7 @@ bash get_statistics.sh
 **Step 3: Compare with Existing Knowledge**
 ```bash
 # Before committing, see what changed
-bash compare_knowledge.sh \
+bash ~/.kiro/scripts/compare_knowledge.sh \
   --type function \
   --name "$TARGET_FUNCTION" \
   --findings findings.json
@@ -1289,7 +1289,7 @@ bash compare_knowledge.sh \
 **Step 6: Commit Knowledge (with automatic metadata update)**
 ```bash
 # Commit knowledge
-bash commit_knowledge.sh \
+bash ~/.kiro/scripts/commit_knowledge.sh \
   --type function \
   --name "$TARGET_FUNCTION" \
   --findings findings.json \

@@ -6,6 +6,150 @@
 
 ---
 
+## AKR Error Logging
+
+**MANDATORY: All significant errors must be logged to the AKR as issues.**
+
+This ensures future agents are aware of recurring problems, tool failures, and environmental issues without having to rediscover them.
+
+### When to Log an Error to AKR
+
+Log to AKR when:
+- genero-tools fails repeatedly (not just a one-off timeout)
+- A fallback tool also fails or produces unreliable results
+- A script error blocks progress
+- A permission or environment issue is encountered
+- A pattern of failures is detected across multiple operations
+
+Do NOT log every transient error — only those that are likely to recur or affect other agents.
+
+### How to Log an Error to AKR
+
+```bash
+# Create an error findings file
+cat > /tmp/error_findings.json << 'EOF'
+{
+  "summary": "Brief description of the error",
+  "key_findings": [
+    "Error: [exact error message]",
+    "Context: [what was being attempted]",
+    "Frequency: [how often this occurs]",
+    "Impact: [what it blocks]"
+  ],
+  "metrics": {
+    "complexity": 0,
+    "lines_of_code": 0,
+    "parameter_count": 0,
+    "dependent_count": 0
+  },
+  "known_issues": ["[error description]"],
+  "recommendations": [
+    "Workaround: [what to do instead]",
+    "Fix: [how to resolve permanently]"
+  ]
+}
+EOF
+
+# Commit as an issue
+bash ~/.kiro/scripts/commit_knowledge.sh \
+  --type issue \
+  --name "error_[short_description]" \
+  --findings /tmp/error_findings.json \
+  --action create
+```
+
+### Error Naming Convention
+
+Use descriptive, searchable names:
+- `error_genero_tools_timeout` — genero-tools query timeouts
+- `error_akr_lock_timeout` — AKR file lock timeouts
+- `error_permission_denied_akr` — permission issues on AKR path
+- `error_missing_brodir` — BRODIR environment variable not set
+
+### Check for Known Errors Before Starting
+
+At the start of each task, check if known errors exist that might affect your work:
+
+```bash
+bash ~/.kiro/scripts/search_knowledge.sh --category issues --query "error"
+bash ~/.kiro/scripts/search_knowledge.sh --category issues --query "genero_tools"
+```
+
+### Error Logging Examples
+
+**genero-tools timeout:**
+```bash
+cat > /tmp/error_findings.json << 'EOF'
+{
+  "summary": "genero-tools query times out on large dependency queries",
+  "key_findings": [
+    "Error: Timeout after 30 seconds on find-function-dependents",
+    "Context: Functions with >50 dependents trigger timeout",
+    "Frequency: Consistent on large modules",
+    "Impact: Cannot get full dependent list via genero-tools"
+  ],
+  "metrics": {"complexity": 0, "lines_of_code": 0, "parameter_count": 0, "dependent_count": 0},
+  "known_issues": ["find-function-dependents times out for functions with >50 dependents"],
+  "recommendations": [
+    "Workaround: Use grep fallback: grep -r 'CALL function_name' --include='*.4gl'",
+    "Fix: Increase GENERO_TOOLS_TIMEOUT or use --limit pagination"
+  ]
+}
+EOF
+bash ~/.kiro/scripts/commit_knowledge.sh --type issue --name "error_genero_tools_timeout" --findings /tmp/error_findings.json --action create
+```
+
+---
+
+## Working Directory Constraint
+
+**Agents must operate within the user's codebase directory at all times.**
+
+All file reads, writes, searches, and shell commands must be scoped to the current working directory (the user's Genero/4GL source tree) unless explicit human permission is granted.
+
+**The only pre-approved exception** is the AKR path (`$GENERO_AKR_BASE_PATH`) accessed via the provided scripts at `~/.kiro/scripts/`.
+
+### Permitted Operations (no permission needed)
+
+```bash
+# Searching within codebase
+grep -r "FUNCTION process_order" .
+grep -r "FUNCTION process_order" src/
+find . -name "*.4gl"
+
+# AKR script operations (always permitted)
+bash ~/.kiro/scripts/retrieve_knowledge.sh ...
+bash ~/.kiro/scripts/commit_knowledge.sh ...
+bash ~/.kiro/scripts/search_knowledge.sh ...
+bash ~/.kiro/scripts/validate_knowledge.sh
+
+# genero-tools queries (always permitted)
+bash $GENERO_TOOLS_PATH/query.sh find-function "my_function"
+```
+
+### Operations Requiring Explicit Permission
+
+Stop and ask before:
+- Any `svn commit`, `git push`, or version control write
+- Accessing paths outside the codebase (e.g., `/opt/`, `/etc/`, `/home/other/`)
+- Running system-level commands (`sudo`, `chmod` on system paths, etc.)
+- Deleting files outside the codebase
+- Installing packages or modifying system configuration
+
+**Permission request format:**
+```
+PERMISSION REQUIRED
+
+Action: [what you need to do]
+Path/Scope: [exact path or system affected]
+Reason: [why this is necessary for the task]
+Risk: [what could go wrong]
+
+Approve? (yes/no)
+```
+
+---
+
 ## Error Handling Strategy
 
 ### Primary Strategy: genero-tools First

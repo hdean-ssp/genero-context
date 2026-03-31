@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Codebase Boundary Check",
+  "description": "Before any shell command, reminds agents to stay within the user's codebase directory and require explicit permission for operations outside it",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": ["shell"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before executing this shell command, verify it complies with the working directory constraint:\n\n**PERMITTED without asking:**\n- Commands scoped to the current codebase directory (relative paths, `./`, `src/`, etc.)\n- AKR script calls: `bash ~/.kiro/scripts/*.sh`\n- genero-tools queries: `bash $GENERO_TOOLS_PATH/query.sh ...`\n- Read-only system queries: `echo $BRODIR`, `ls -la $BRODIR/etc/genero-tools`\n\n**REQUIRES explicit human permission:**\n- Any path outside the codebase (`/opt/`, `/etc/`, `/home/other/`, absolute paths not in AKR/genero-tools)\n- Version control writes: `svn commit`, `git push`, `git commit`\n- Destructive operations outside codebase: `rm`, `chmod`, `chown` on system paths\n- Package installation or system configuration changes\n\nIf this command operates outside the permitted scope, STOP and request permission using the format in genero-context-workflow.md before proceeding."
+  }
+}
