@@ -56,6 +56,7 @@ bash ~/.kiro/scripts/validate_knowledge.sh
 | Doc | Purpose |
 |-----|---------|
 | [INSTALLATION.md](INSTALLATION.md) | Full setup and configuration guide |
+| [FRAMEWORK.md](FRAMEWORK.md) | Architecture diagram and agent flow |
 | [.kiro/scripts/README.md](.kiro/scripts/README.md) | All 18 scripts with usage examples |
 | [.kiro/steering/](./kiro/steering/) | Workflow guides loaded automatically by Kiro |
 | [.kiro/skills/](./kiro/skills/) | AKR Management Specialist skill |
