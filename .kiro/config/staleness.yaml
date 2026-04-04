@@ -1,0 +1,132 @@
+# Staleness Configuration for AKR
+# Defines thresholds and strategies for detecting and managing stale knowledge
+
+# Staleness thresholds by artifact type
+staleness_thresholds:
+  function:
+    # Age-based staleness: mark as stale if not updated in N days
+    age_days: 30
+    
+    # Source change detection: mark as stale if source file changed
+    source_change: true
+    
+    # Dependent change detection: mark as stale if dependent functions changed
+    dependent_change: true
+    
+    # Complexity threshold: mark as stale if complexity changed by >20%
+    complexity_threshold: 0.20
+  
+  module:
+    age_days: 60
+    source_change: true
+    dependent_change: false
+    complexity_threshold: 0.25
+  
+  file:
+    age_days: 90
+    source_change: true
+    dependent_change: false
+    complexity_threshold: 0.30
+  
+  pattern:
+    age_days: 120
+    source_change: false
+    dependent_change: false
+    complexity_threshold: 0.50
+  
+  issue:
+    age_days: 90
+    source_change: false
+    dependent_change: false
+    complexity_threshold: 0.0
+
+# Refresh strategy configuration
+refresh_strategy:
+  # Automatically refresh stale knowledge
+  auto_refresh: true
+  
+  # Refresh knowledge at task start if stale
+  refresh_on_task_start: true
+  
+  # Refresh threshold: mark as stale if age > threshold
+  refresh_threshold_days: 30
+  
+  # Maximum age before forcing refresh
+  max_age_days: 90
+  
+  # Refresh priority: which artifacts to refresh first
+  refresh_priority:
+    - high_complexity_functions  # Functions with complexity > 10
+    - high_risk_functions        # Functions with complexity > 10 OR dependents > 15
+    - recently_changed           # Recently modified source files
+    - high_dependent_count       # Functions with many dependents
+
+# Staleness status definitions
+staleness_statuses:
+  FRESH:
+    description: "Knowledge is current and accurate"
+    age_max_days: 30
+    action: "No action needed"
+  
+  STALE:
+    description: "Knowledge may be outdated, recommend refresh"
+    age_max_days: 60
+    action: "Recommend re-analysis"
+  
+  VERY_STALE:
+    description: "Knowledge is likely outdated, should refresh"
+    age_max_days: 90
+    action: "Schedule re-analysis"
+  
+  POTENTIALLY_STALE:
+    description: "Source code changed, knowledge may be outdated"
+    age_max_days: 0
+    action: "Re-analyze immediately"
+
+# Refresh triggers
+refresh_triggers:
+  # Trigger refresh when source file changes
+  source_change:
+    enabled: true
+    delay_seconds: 0
+    action: "Mark as POTENTIALLY_STALE"
+  
+  # Trigger refresh when dependent changes
+  dependent_change:
+    enabled: true
+    delay_seconds: 0
+    action: "Mark as POTENTIALLY_STALE"
+  
+  # Trigger refresh when age threshold exceeded
+  age_threshold:
+    enabled: true
+    delay_seconds: 0
+    action: "Mark as STALE"
+  
+  # Trigger refresh when complexity changes significantly
+  complexity_change:
+    enabled: true
+    delay_seconds: 0
+    action: "Mark as POTENTIALLY_STALE"
+
+# Logging configuration
+logging:
+  # Log staleness checks
+  log_staleness_checks: true
+  
+  # Log refresh actions
+  log_refresh_actions: true
+  
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  log_level: INFO
+
+# Performance tuning
+performance:
+  # Cache staleness status for N seconds
+  cache_ttl_seconds: 300
+  
+  # Batch size for staleness checks
+  batch_size: 100
+  
+  # Maximum concurrent refresh operations
+  max_concurrent_refreshes: 5

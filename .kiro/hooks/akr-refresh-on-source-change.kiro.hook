@@ -1,0 +1,13 @@
+{
+  "name": "AKR Refresh on Source Change",
+  "version": "1.0.0",
+  "description": "Automatically detect source code changes and mark affected AKR entries as stale",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["**/*.4gl"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Source files changed. Run 'bash .kiro/scripts/detect_source_changes.sh' to detect changes and mark affected knowledge as stale. This ensures agents work with current information."
+  }
+}

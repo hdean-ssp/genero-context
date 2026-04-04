@@ -1,0 +1,13 @@
+{
+  "name": "AKR Auto-Refresh Stale Knowledge",
+  "version": "1.0.0",
+  "description": "Automatically refresh stale knowledge when agents retrieve it",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": ".*retrieve_knowledge.*"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before using this knowledge, check if it's stale. Run: bash .kiro/scripts/detect_staleness.sh --format json. If any artifacts are STALE or POTENTIALLY_STALE, consider refreshing with: bash .kiro/scripts/refresh_stale_knowledge.sh --limit 5"
+  }
+}

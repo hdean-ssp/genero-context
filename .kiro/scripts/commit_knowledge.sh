@@ -402,4 +402,16 @@ else
   log_error "Failed to update metadata (continuing anyway)"
 fi
 
+# Sync to database (Phase 2)
+log_debug "Syncing to database..."
+if command -v python3 &> /dev/null; then
+  if python3 "${SCRIPT_DIR}/sync_akr_db.py" --artifact "$NAME" 2>/dev/null; then
+    log_debug "Database synced successfully"
+  else
+    log_debug "Database sync failed (continuing anyway - database is optional)"
+  fi
+else
+  log_debug "Python3 not available, skipping database sync"
+fi
+
 exit 0
